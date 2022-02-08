@@ -76,17 +76,17 @@ Program:		/* empty */{printf("Program->Epsilon\n");}
 				printf("func main");
 			}
 			else{
-				printf("There is already a main function");
+				printf("Error Line %d: There is already a main function", numLines);
 				exit(1);
 			}
 		}
 		else{
 			if(!has_main){
-				printf("There is no main function");
+				printf("Error Line %d: There is no main function", numLines);
 				exit(1);
 			}
 			else{
-				printf("func" + $2);
+				printf("func %d\n", $2);
 			}
 		}
 	 };
@@ -136,10 +136,10 @@ Expression:	Multiplicative-Expr{printf("Expression->Multiplicative-Expr\n");}
 		|Multiplicative-Expr PLUS Multiplicative-Expr{printf("Expression->Multiplicative-Expr PLUS Multiplicative-Expr\n");}
 		|Multiplicative-Expr MINUS Multiplicative-Expr{printf("Expression->Multiplicative-Expr MINUS Multiplicative-Expr\n");}
 
-Multiplicative-Expr: 	Term {printf("Multiplicative-Expr->Term\n");}
-			|Term MULT Term {printf("Multiplicative-Expr->Term MULT Term\n");}
-			|Term DIV Term {printf("Multiplicative-Expr->Term DIV Term\n");}
-			|Term MOD Term {printf("Multiplicative-Expr->Term MOD Term\n");}
+Multiplicative-Expr: 	Term {printf("%d\n", $1);}
+			|Term MULT Term {printf("* %d, %d, %d\n", $$, $1, $3);}
+			|Term DIV Term {printf("/ %d, %d, %d\n", $$, $1, $3);}
+			|Term MOD Term {printf("\% %d, %d, %d\n", $$, $1, $3);}
 
 Term:		Var {printf("Term->Var\n");}
 		|NUMBER{printf("Term->NUMBER %d\n",$1);}
