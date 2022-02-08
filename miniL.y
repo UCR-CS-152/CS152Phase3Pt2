@@ -7,6 +7,7 @@
   void yyerror(const char *msg) {
     printf("Error at  Line %d:  Row: %d\n", numLines, numColumns);
   }
+  int has_main = 0;
 %}
 
 %union{
@@ -68,8 +69,27 @@
 %%
 
 Program:		/* empty */{printf("Program->Epsilon\n");}
-    | FUNCTIONS Program	{ printf("Program ->FUNCTIONS Program\n"); }
-		;
+    | FUNCTIONS Program	{ 
+		if($2 == "main"){
+			if(!has_main){
+				has_main++;
+				printf("func main");
+			}
+			else{
+				printf("There is already a main function");
+				exit(1);
+			}
+		}
+		else{
+			if(!has_main){
+				printf("There is no main function");
+				exit(1);
+			}
+			else{
+				printf("func" + $2);
+			}
+		}
+	 };
 FUNCTIONS: FUNCTION Ident SEMICOLON BEGIN_PARAMS Declaration END_PARAMS BEGIN_LOCALS Declaration END_LOCALS BEGIN_BODY Statement END_BODY {printf("FUNCTIONS-> FUNCTION Ident SEMICOLON BEGIN_PARAMS Declaration END_PARAMS BEGIN_LOCALS Declaration END_LOCALS BEGIN_BODY Statement END_BODY\n");}
 
 Declaration: 	{printf("Declaration->Epsilon\n");}
@@ -136,7 +156,7 @@ Var:
     		;
 
 Ident:
-        IDENT{printf("Ident -> IDENT %s \n", $1);}
+        IDENT{$$ = $1;}
 %% 
 
 int main(int argc, char **argv) {
