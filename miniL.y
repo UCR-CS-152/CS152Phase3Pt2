@@ -8,6 +8,10 @@
     printf("Error at  Line %d:  Row: %d\n", numLines, numColumns);
   }
   int has_main = 0;
+  struct codeNode{
+	  std::string code;
+	  std::string name;
+  }
 %}
 
 %union{
@@ -133,8 +137,22 @@ Comp:		EQ{printf("Comp->EQ\n");}
 		|LTE{printf("Comp->LTE\n");}
 
 Expression:	Multiplicative-Expr{printf("Expression->Multiplicative-Expr\n");}
-		|Multiplicative-Expr PLUS Multiplicative-Expr{printf("+ %d, %d, %d\n", $$, $1, $3);");}
-		|Multiplicative-Expr MINUS Multiplicative-Expr{printf("- %d, %d, %d\n", $$, $1, $3");}
+		|Multiplicative-Expr PLUS Multiplicative-Expr{
+			std::string temp = create_temp();
+			codeNode *node = new codeNode;
+			node->code = $1->code + $3->code + decl_temp_code(temp);
+			node->code += std::string("+ ") + temp + std::string(,) + $1->name + std::string(,) + $3->name + std::string("\n");
+			node->name = temp;
+			$$ = node;
+		}
+		|Multiplicative-Expr MINUS Multiplicative-Expr{
+			std::string temp = create_temp();
+			codeNode *node = new codeNode;
+			node->code = $1->code + $3->code + decl_temp_code(temp);
+			node->code += std::string("- ") + temp + std::string(,) + $1->name + std::string(,) + $3->name + std::string("\n");
+			node->name = temp;
+			$$ = node;
+		}
 
 Multiplicative-Expr: 	Term {printf("%d\n", $1);}
 			|Term MULT Term {printf("* %d, %d, %d\n", $$, $1, $3);}
@@ -151,7 +169,16 @@ Expression1: 	{printf("Expression1->Epsilon\n");}
 		|Expression COMMA Expression1 {printf("Expression1->Epsilon\n");}
 
 Var:
-    		Ident{printf("Var->Ident\n");}
+    		Ident{
+				codeNode *node = new codeNode;
+				node->code = "";
+				node->name = $1;
+				std::string error;
+				if(!find(node->name, Iteger, error)){
+					yyerror(error.c_str());
+				}
+				$$ = node;
+			}
     		| Ident L_SQUARE_BRACKET Expression R_SQUARE_BRACKET {printf("Var->Ident L_SQUARE_BRACKET Expression R_SQUARE_BRACKET\n");}
     		;
 
