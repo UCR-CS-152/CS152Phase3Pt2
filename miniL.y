@@ -74,27 +74,14 @@
 
 Program:		/* empty */{printf("Program->Epsilon\n");}
     | FUNCTIONS Program	{ 
-		if($2 == "main"){
-			if(!has_main){
-				has_main++;
-				printf("func main");
-			}
-			else{
-				printf("Error Line %d: There is already a main function", numLines);
-				exit(1);
-			}
-		}
-		else{
-			if(!has_main){
-				printf("Error Line %d: There is no main function", numLines);
-				exit(1);
-			}
-			else{
-				printf("func %d\n", $2);
-			}
-		}
+		//idk bout this one
 	 };
-FUNCTIONS: FUNCTION Ident SEMICOLON BEGIN_PARAMS Declaration END_PARAMS BEGIN_LOCALS Declaration END_LOCALS BEGIN_BODY Statement END_BODY {printf("FUNCTIONS-> FUNCTION Ident SEMICOLON BEGIN_PARAMS Declaration END_PARAMS BEGIN_LOCALS Declaration END_LOCALS BEGIN_BODY Statement END_BODY\n");}
+FUNCTIONS: FUNCTION Ident SEMICOLON BEGIN_PARAMS Declaration END_PARAMS BEGIN_LOCALS Declaration END_LOCALS BEGIN_BODY Statement END_BODY {
+	codeNode *node = new codeNode;
+	node->code = $2->code;
+	node->code += std::string("func ") + $2->name + std::string("\n");
+	$$ = node;
+}
 
 Declaration: 	{printf("Declaration->Epsilon\n");}
 		|Ident COLON INTEGER SEMICOLON Declaration {printf("Declaration->Ident COLON NUMBER SEMICOLON Declaration\n");}
