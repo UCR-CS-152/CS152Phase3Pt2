@@ -195,7 +195,7 @@ Var:
 				node->code = "";
 				node->name = $1;
 				std::string error;
-				if(!find(node->name, Iteger, error)){
+				if(!find(node->name, Integer, error)){
 					yyerror(error.c_str());
 				}
 				$$ = node;
@@ -204,7 +204,16 @@ Var:
     		;
 
 Ident:
-        IDENT{$$ = $1;}
+        IDENT{
+			codeNode *node = new codeNode;
+			node->code = "";
+			node->name = $1;
+			std::string error;
+			if(!find(node->name, Integer, error)){
+				yyerror(error.c_str());
+			}
+			$$ = node;
+		}
 %% 
 
 int main(int argc, char **argv) {
