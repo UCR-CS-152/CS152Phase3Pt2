@@ -101,7 +101,17 @@ Declaration: 	{printf("Declaration->Epsilon\n");}
 		|Ident COLON ARRAY L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET OF INTEGER SEMICOLON Declaration{printf("Declaration->Ident COLON ARRAY L_SQUARE_BRACKET NUMBER %d R_SQUARE_BRACKET OF NUMBER SEMICOLON Declaration\n",$5);}
 		;
 
-Statement: 	Var ASSIGN Expression SEMICOLON Statement1 {printf("Statement->Var ASSIGN Expression SEMICOLON Statement1\n");}
+Statement: 	Var ASSIGN Expression SEMICOLON Statement1 {
+			std::string var_name = $1;
+			std::string error;
+			if(!find(node->name, Integer, error)){
+				yyerror(error.c_str());
+			}
+			codeNode *node = new codeNode;
+			node->code = $3->code;
+			node->code += std::string("= ") + var_name + std::string(", ") + $3->name + std::string("\n");
+			$$ = node;
+		}
 		|IF Bool-Exp THEN Statement ENDIF SEMICOLON Statement1 {printf("Statement->IF Bool-Exp THEN Statement ENDIF SEMICOLON Statment1\n");}
 		|IF Bool-Exp THEN Statement ELSE Statement ENDIF SEMICOLON Statement1 {printf("Statement->IF Bool-Exp THEN Statement ELSE Statement ENDIF SEMICOLON Statment1\n");}
 		|WHILE Bool-Exp BEGINLOOP Statement ENDLOOP SEMICOLON Statement1 {printf("Statement->WHILE Bool-Exp BEGINLOOP Statement ENDLOOP SEMICOLON Statement1\n");}
@@ -113,7 +123,17 @@ Statement: 	Var ASSIGN Expression SEMICOLON Statement1 {printf("Statement->Var A
 		|RETURN Expression SEMICOLON Statement1 {printf("Statement->RETURN Expression SEMICOLON Statement1\n");}
 
 Statement1:	{printf("Statement1->Epsilon\n");}
-		|Var ASSIGN Expression SEMICOLON Statement1 {printf("Statement1->Var ASSIGN Expression SEMICOLON Statement1\n");}
+		|Var ASSIGN Expression SEMICOLON Statement1 {
+					std::string var_name = $1;
+					std::string error;
+					if(!find(node->name, Integer, error)){
+						yyerror(error.c_str());
+					}
+					codeNode *node = new codeNode;
+					node->code = $3->code;
+					node->code += std::string("= ") + var_name + std::string(", ") + $3->name + std::string("\n");
+					$$ = node;
+				}
                 |IF Bool-Exp THEN Statement ENDIF SEMICOLON Statement1 {printf("Statement1->IF Bool-Exp THEN Statement ENDIF SEMICOLON Statment1\n");}
                 |IF Bool-Exp THEN Statement ELSE Statement ENDIF SEMICOLON Statement1 {printf("Statement1->IF Bool-Exp THEN Statement ELSE Statement ENDIF SEMICOLON Statment1\n");}
                 |WHILE Bool-Exp BEGINLOOP Statement ENDLOOP SEMICOLON Statement1 {printf("Statement1->WHILE Bool-Exp BEGINLOOP Statement ENDLOOP SEMICOLON Statement1\n");}
@@ -203,7 +223,7 @@ Var:
     		| Ident L_SQUARE_BRACKET Expression R_SQUARE_BRACKET {printf("Var->Ident L_SQUARE_BRACKET Expression R_SQUARE_BRACKET\n");}
     		;
 
-Ident:
+Ident:/*We need to check this for sure*/
         IDENT{
 			codeNode *node = new codeNode;
 			node->code = "";
