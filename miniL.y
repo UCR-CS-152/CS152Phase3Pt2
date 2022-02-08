@@ -141,7 +141,7 @@ Expression:	Multiplicative-Expr{printf("Expression->Multiplicative-Expr\n");}
 			std::string temp = create_temp();
 			codeNode *node = new codeNode;
 			node->code = $1->code + $3->code + decl_temp_code(temp);
-			node->code += std::string("+ ") + temp + std::string(,) + $1->name + std::string(,) + $3->name + std::string("\n");
+			node->code += std::string("+ ") + temp + std::string(", ") + $1->name + std::string(", ") + $3->name + std::string("\n");
 			node->name = temp;
 			$$ = node;
 		}
@@ -149,15 +149,36 @@ Expression:	Multiplicative-Expr{printf("Expression->Multiplicative-Expr\n");}
 			std::string temp = create_temp();
 			codeNode *node = new codeNode;
 			node->code = $1->code + $3->code + decl_temp_code(temp);
-			node->code += std::string("- ") + temp + std::string(,) + $1->name + std::string(,) + $3->name + std::string("\n");
+			node->code += std::string("- ") + temp + std::string(", ") + $1->name + std::string(", ") + $3->name + std::string("\n");
 			node->name = temp;
 			$$ = node;
 		}
 
 Multiplicative-Expr: 	Term {printf("%d\n", $1);}
-			|Term MULT Term {printf("* %d, %d, %d\n", $$, $1, $3);}
-			|Term DIV Term {printf("/ %d, %d, %d\n", $$, $1, $3);}
-			|Term MOD Term {printf("\% %d, %d, %d\n", $$, $1, $3);}
+			|Term MULT Term {
+				std::string temp = create_temp();
+				codeNode *node = new codeNode;
+				node->code = $1->code + $3->code + decl_temp_code(temp);
+				node->code += std::string("* ") + temp + std::string(", ") + $1->name + std::string(", ") + $3->name + std::string("\n");
+				node->name = temp;
+				$$ = node;
+			}
+			|Term DIV Term {
+				std::string temp = create_temp();
+				codeNode *node = new codeNode;
+				node->code = $1->code + $3->code + decl_temp_code(temp);
+				node->code += std::string("/ ") + temp + std::string(", ") + $1->name + std::string(", ") + $3->name + std::string("\n");
+				node->name = temp;
+				$$ = node;
+			}
+			|Term MOD Term {
+				std::string temp = create_temp();
+				codeNode *node = new codeNode;
+				node->code = $1->code + $3->code + decl_temp_code(temp);
+				node->code += std::string("% ") + temp + std::string(", ") + $1->name + std::string(", ") + $3->name + std::string("\n");
+				node->name = temp;
+				$$ = node;
+			}
 
 Term:		Var {printf("Term->Var\n");}
 		|NUMBER{printf("Term->NUMBER %d\n",$1);}
