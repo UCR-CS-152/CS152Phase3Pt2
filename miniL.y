@@ -133,8 +133,8 @@ Comp:		EQ{printf("Comp->EQ\n");}
 		|LTE{printf("Comp->LTE\n");}
 
 Expression:	Multiplicative-Expr{printf("Expression->Multiplicative-Expr\n");}
-		|Multiplicative-Expr PLUS Multiplicative-Expr{printf("Expression->Multiplicative-Expr PLUS Multiplicative-Expr\n");}
-		|Multiplicative-Expr MINUS Multiplicative-Expr{printf("Expression->Multiplicative-Expr MINUS Multiplicative-Expr\n");}
+		|Multiplicative-Expr PLUS Multiplicative-Expr{printf("+ %d, %d, %d\n", $$, $1, $3);");}
+		|Multiplicative-Expr MINUS Multiplicative-Expr{printf("- %d, %d, %d\n", $$, $1, $3");}
 
 Multiplicative-Expr: 	Term {printf("%d\n", $1);}
 			|Term MULT Term {printf("* %d, %d, %d\n", $$, $1, $3);}
