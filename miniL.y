@@ -197,7 +197,7 @@ Expression1: 	{printf("Expression1->Epsilon\n");}
 		|Expression COMMA Expression1 {printf("Expression1->Epsilon\n");}
 
 Var:
-    		Ident{
+    		Ident{/*
 				codeNode *node = new codeNode;
 				node->code = "";
 				node->name = $1;
@@ -205,7 +205,7 @@ Var:
 				if(!find(node->name, Integer, error)){
 					yyerror(error.c_str());
 				}
-				$$ = node;
+				$$ = node;*/
 			}
     		| Ident L_SQUARE_BRACKET Expression R_SQUARE_BRACKET {printf("Var->Ident L_SQUARE_BRACKET Expression R_SQUARE_BRACKET\n");}
     		;
