@@ -111,6 +111,13 @@ Statement: 	Var ASSIGN Expression SEMICOLON Statement1 {
 			node->code += std::string("= ") + var_name + std::string(", ") + $3->name + std::string("\n")+$5->code;
 			$$ = node;
 		}
+                |Ident L_SQUARE_BRACKET Expression R_SQUARE_BRACKET ASSIGN Experession SEMICOLON Statement1{
+                                                                                                                std::string array_name= $1->name;
+                                                                                                                codeNode *node = new codeNode;
+                                                                                                                node->code=$3->code + $6->code;
+                                                                                                                node->code=std::string("[]= ")+ array_name+std::string(", ")+$3->name+std::string(", ")+$6->name+std::string("\n")+$9->code;
+                                                                                                                $$=node;
+                                                                                                                }
 		|IF Bool-Exp THEN Statement ENDIF SEMICOLON Statement1 {printf("Statement->IF Bool-Exp THEN Statement ENDIF SEMICOLON Statment1\n");}
 		|IF Bool-Exp THEN Statement ELSE Statement ENDIF SEMICOLON Statement1 {printf("Statement->IF Bool-Exp THEN Statement ELSE Statement ENDIF SEMICOLON Statment1\n");}
 		|WHILE Bool-Exp BEGINLOOP Statement ENDLOOP SEMICOLON Statement1 {printf("Statement->WHILE Bool-Exp BEGINLOOP Statement ENDLOOP SEMICOLON Statement1\n");}
@@ -145,11 +152,12 @@ Statement: 	Var ASSIGN Expression SEMICOLON Statement1 {
 												}
 		|CONTINUE SEMICOLON Statement1 {printf("Statement->CONTINUE SEMICOLON Statement1\n");}
 		|BREAK SEMICOLON Statement1 {printf("Statement->BREAK SEMICOLON Statement1\n");}
-		|RETURN Expression SEMICOLON Statement1 {printf("Statement->RETURN Expression SEMICOLON Statement1\n");}
+		|RETURN Expression SEMICOLON Statement1 {//return src 
+							}
 
 Statement1:	{printf("Statement1->Epsilon\n");}
-		|Var ASSIGN Expression SEMICOLON Statement1 {
-					std::string var_name = $1;
+		|Ident ASSIGN Expression SEMICOLON Statement1 {
+					std::string var_name = $1->name;
 					std::string error;
 					if(!find(node->name, Integer, error)){
 						yyerror(error.c_str());
@@ -159,6 +167,13 @@ Statement1:	{printf("Statement1->Epsilon\n");}
 					node->code += std::string("= ") + var_name + std::string(", ") + $3->name + std::string("\n")+$5->code;
 					$$ = node;
 				}
+		|Ident L_SQUARE_BRACKET Expression R_SQUARE_BRACKET ASSIGN Experession SEMICOLON Statement1{
+														std::string array_name= $1->name;
+														codeNode *node = new codeNode;
+														node->code=$3->code + $6->code;
+														node->code=std::string("[]= ")+ array_name+std::string(", ")+$3->name+std::string(", ")+$6->name+std::string("\n")+$9->code;
+														$$=node;
+														}
                 |IF Bool-Exp THEN Statement ENDIF SEMICOLON Statement1 {printf("Statement1->IF Bool-Exp THEN Statement ENDIF SEMICOLON Statment1\n");}
                 |IF Bool-Exp THEN Statement ELSE Statement ENDIF SEMICOLON Statement1 {printf("Statement1->IF Bool-Exp THEN Statement ELSE Statement ENDIF SEMICOLON Statment1\n");}
                 |WHILE Bool-Exp BEGINLOOP Statement ENDLOOP SEMICOLON Statement1 {printf("Statement1->WHILE Bool-Exp BEGINLOOP Statement ENDLOOP SEMICOLON Statement1\n");}
@@ -251,14 +266,18 @@ Multiplicative-Expr: 	Term {printf("%d\n", $1);}
 				$$ = node;
 			}
 
-Term:		Var {printf("Term->Var\n");}
-		|NUMBER{printf("Term->NUMBER %d\n",$1);}
-		|L_PAREN Expression R_PAREN{printf("Term->L_PAREN Expression R_PAREN\n");}
-		|Ident L_PAREN Expression1 R_PAREN{printf("Term->Ident L_PAREN Expression1 R_PAREN\n");}
+Term:		Var{//return temp register
+			}
+		|NUMBER{//return number;
+			}
+		|L_PAREN Expression R_PAREN{//return expression
+						}
+		|Ident L_PAREN Expression1 R_PAREN{//function call
+	}
 
 Expression1: 	{printf("Expression1->Epsilon\n");}
-		|Expression{printf("Expression1->Epsilon\n");}
-		|Expression COMMA Expression1 {printf("Expression1->Epsilon\n");}
+		|Expression{printf("Expression1->Expression\n");}
+		|Expression COMMA Expression1 {printf("Expression1->Expression COMMA Expression1\n");}
 
 Var:
     		Ident{
@@ -272,7 +291,8 @@ Var:
 				$$ = node;
 				
 			}
-    		| Ident L_SQUARE_BRACKET Expression R_SQUARE_BRACKET {printf("Var->Ident L_SQUARE_BRACKET Expression R_SQUARE_BRACKET\n");}
+    		| Ident L_SQUARE_BRACKET Expression R_SQUARE_BRACKET {//array access statement store temp to return temp register
+		}
     		;
 
 Ident:/*We need to check this for sure*/
