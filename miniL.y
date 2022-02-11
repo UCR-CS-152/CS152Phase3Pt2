@@ -75,11 +75,14 @@
 Program:		/* empty */{printf("Program->Epsilon\n");}
     | FUNCTIONS Program	{ 
 		//idk bout this one
+		codeNode *node= new codeNode;
+		node->code=$1->code+$2->code;
+		$$=node;
 	 };
 FUNCTIONS: FUNCTION Ident SEMICOLON BEGIN_PARAMS Declaration END_PARAMS BEGIN_LOCALS Declaration END_LOCALS BEGIN_BODY Statement END_BODY {
 	codeNode *node = new codeNode;
 	node->code = $2->code;
-	node->code += std::string("func ") + $2->name + std::string("\n");
+	node->code += std::string("func ") + $2->name + std::string("\n")+$5->code+$8->code+$11->code;
 	$$ = node;
 }
 
@@ -87,12 +90,13 @@ Declaration: 	{printf("Declaration->Epsilon\n");}
 		|Ident COLON INTEGER SEMICOLON Declaration {
 								codeNode *node = new codeNode;
 								node->code=$1->code;
-								node->code+= std::string(". ")+$1->name+std::string("\n");
+								node->code+= std::string(". ")+$1->name+std::string("\n")+$5->code;
+								$$=node;
 								}
 		|Ident COLON ARRAY L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET OF INTEGER SEMICOLON Declaration{
 								codeNode *node = new codeNode;
                                                                 node->code=$1->code;
-                                                                node->code+= std::string(".[] ")+$1->name+std::string(", ")+std::to_string($5)+std::string("\n");
+                                                                node->code+= std::string(".[] ")+$1->name+std::string(", ")+std::to_string($5)+std::string("\n")+$10->code;
 								}
 		;
 
@@ -104,7 +108,7 @@ Statement: 	Var ASSIGN Expression SEMICOLON Statement1 {
 			}
 			codeNode *node = new codeNode;
 			node->code = $3->code;
-			node->code += std::string("= ") + var_name + std::string(", ") + $3->name + std::string("\n");
+			node->code += std::string("= ") + var_name + std::string(", ") + $3->name + std::string("\n")+$5->code;
 			$$ = node;
 		}
 		|IF Bool-Exp THEN Statement ENDIF SEMICOLON Statement1 {printf("Statement->IF Bool-Exp THEN Statement ENDIF SEMICOLON Statment1\n");}
@@ -114,28 +118,28 @@ Statement: 	Var ASSIGN Expression SEMICOLON Statement1 {
 		|READ Ident SEMICOLON Statement1 {
 							std::string temp = create_temp();
 							codeNode *node = new codeNode;
-							node->code=std::string(".< ")+$2->name+std::string("\n");
+							node->code=std::string(".< ")+$2->name+std::string("\n")+$4->code;
 							node->name=temp;
 							$$=node;
 						}
                 |READ Ident L_SQUARE_BRACKE Expression R_SQUARE_BRACKET SEMICOLON Statement1 {
 													std::string temp = create_temp();
 													codeNode *node = new codeNode;
-													node->code=std::string(",[]< ")+$2->name+std::string(", ")+$4->code+std::string("\n");
+													node->code=std::string(",[]< ")+$2->name+std::string(", ")+$4->code+std::string("\n")+$7->code;
 													node->name=temp;
 													$$=node;
 												}
 		|WRITE Ident SEMICOLON Statement1 {
                                                         std::string temp = create_temp();
                                                         codeNode *node = new codeNode;
-                                                        node->code=std::string(".> ")+$2->name+std::string("\n");
+                                                        node->code=std::string(".> ")+$2->name+std::string("\n")+$4->code;
                                                         node->name=temp;
                                                         $$=node;
                                                 }
                 |WRITE Ident L_SQUARE_BRACKE Expression R_SQUARE_BRACKET SEMICOLON Statement1 {
                                                                                                         std::string temp = create_temp();
                                                                                                         codeNode *node = new codeNode;
-                                                                                                        node->code=std::string(",[]> ")+$2->name+std::string(", ")+$4->code+std::string("\n");
+                                                                                                        node->code=std::string(",[]> ")+$2->name+std::string(", ")+$4->code+std::string("\n")+$7->code;
                                                                                                         node->name=temp;
                                                                                                         $$=node;
 												}
@@ -152,7 +156,7 @@ Statement1:	{printf("Statement1->Epsilon\n");}
 					}
 					codeNode *node = new codeNode;
 					node->code = $3->code;
-					node->code += std::string("= ") + var_name + std::string(", ") + $3->name + std::string("\n");
+					node->code += std::string("= ") + var_name + std::string(", ") + $3->name + std::string("\n")+$5->code;
 					$$ = node;
 				}
                 |IF Bool-Exp THEN Statement ENDIF SEMICOLON Statement1 {printf("Statement1->IF Bool-Exp THEN Statement ENDIF SEMICOLON Statment1\n");}
@@ -162,28 +166,28 @@ Statement1:	{printf("Statement1->Epsilon\n");}
 		|READ Ident SEMICOLON Statement1 {
                                                         std::string temp = create_temp();
                                                         codeNode *node = new codeNode;
-                                                        node->code=std::string(".< ")+$2->name;
+                                                        node->code=std::string(".< ")+$2->name+std::string("\n")+$4->code;
                                                         node->name=temp;
                                                         $$=node;
                                                 }
                 |READ Ident L_SQUARE_BRACKE Expression R_SQUARE_BRACKET SEMICOLON Statement1 {
                                                                                                         std::string temp = create_temp();
                                                                                                         codeNode *node = new codeNode;
-                                                                                                        node->code=std::string(",[]< ")+$2->name+std::string(", ")+$4->code+std::string("\n");
+                                                                                                        node->code=std::string(",[]< ")+$2->name+std::string(", ")+$4->code+std::string("\n")+$7->code;
                                                                                                         node->name=temp;
                                                                                                         $$=node;
                                                                                                 }
                 |WRITE Ident SEMICOLON Statement1 {
                                                         std::string temp = create_temp();
                                                         codeNode *node = new codeNode;
-                                                        node->code=std::string(".> ")+$2->name+std::string("\n");
+                                                        node->code=std::string(".> ")+$2->name+std::string("\n")+$4->code;
                                                         node->name=temp;
                                                         $$=node;
                                                 }
                 |WRITE Ident L_SQUARE_BRACKE Expression R_SQUARE_BRACKET SEMICOLON Statement1 {
                                                                                                         std::string temp = create_temp();
                                                                                                         codeNode *node = new codeNode;
-                                                                                                        node->code=std::string(",[]> ")+$2->name+std::string(", ")+$4->code+std::string("\n");
+                                                                                                        node->code=std::string(",[]> ")+$2->name+std::string(", ")+$4->code+std::string("\n")+$7->code;
                                                                                                         node->name=temp;
                                                                                                         $$=node;
                                                                                                 }
@@ -257,15 +261,16 @@ Expression1: 	{printf("Expression1->Epsilon\n");}
 		|Expression COMMA Expression1 {printf("Expression1->Epsilon\n");}
 
 Var:
-    		Ident{/*
+    		Ident{
 				codeNode *node = new codeNode;
 				node->code = "";
-				node->name = $1;
-				std::string error;
-				if(!find(node->name, Integer, error)){
-					yyerror(error.c_str());
-				}
-				$$ = node;*/
+				node->name = $1->name;
+				//std::string error;
+				//if(!find(node->name, Integer, error)){
+				//	yyerror(error.c_str());
+				//}
+				$$ = node;
+				
 			}
     		| Ident L_SQUARE_BRACKET Expression R_SQUARE_BRACKET {printf("Var->Ident L_SQUARE_BRACKET Expression R_SQUARE_BRACKET\n");}
     		;
