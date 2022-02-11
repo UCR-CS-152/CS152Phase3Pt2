@@ -84,8 +84,16 @@ FUNCTIONS: FUNCTION Ident SEMICOLON BEGIN_PARAMS Declaration END_PARAMS BEGIN_LO
 }
 
 Declaration: 	{printf("Declaration->Epsilon\n");}
-		|Ident COLON INTEGER SEMICOLON Declaration {printf("Declaration->Ident COLON NUMBER SEMICOLON Declaration\n");}
-		|Ident COLON ARRAY L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET OF INTEGER SEMICOLON Declaration{printf("Declaration->Ident COLON ARRAY L_SQUARE_BRACKET NUMBER %d R_SQUARE_BRACKET OF NUMBER SEMICOLON Declaration\n",$5);}
+		|Ident COLON INTEGER SEMICOLON Declaration {
+								codeNode *node = new codeNode;
+								node->code=$1->code;
+								node->code+= std::string(". ")+$1->name+std::string("\n");
+								}
+		|Ident COLON ARRAY L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET OF INTEGER SEMICOLON Declaration{
+								codeNode *node = new codeNode;
+                                                                node->code=$1->code;
+                                                                node->code+= std::string(".[] ")+$1->name+std::string(", ")+std::to_string($5)+std::string("\n");
+								}
 		;
 
 Statement: 	Var ASSIGN Expression SEMICOLON Statement1 {
@@ -103,8 +111,34 @@ Statement: 	Var ASSIGN Expression SEMICOLON Statement1 {
 		|IF Bool-Exp THEN Statement ELSE Statement ENDIF SEMICOLON Statement1 {printf("Statement->IF Bool-Exp THEN Statement ELSE Statement ENDIF SEMICOLON Statment1\n");}
 		|WHILE Bool-Exp BEGINLOOP Statement ENDLOOP SEMICOLON Statement1 {printf("Statement->WHILE Bool-Exp BEGINLOOP Statement ENDLOOP SEMICOLON Statement1\n");}
 		|DO BEGINLOOP Statement ENDLOOP WHILE Bool-Exp SEMICOLON Statement1 {printf("Statement->DO BEGINLOOP Statement ENDLOOP WHILE Bool-Exp SEMICOLON Statement1\n");}
-		|READ Var SEMICOLON Statement1 {printf("Statement->READ Var SEMICOLON Statement1\n");}
-		|WRITE Var SEMICOLON Statement1 {printf("Statement->WRITE Var SEMICOLON Statement1\n");}
+		|READ Ident SEMICOLON Statement1 {
+							std::string temp = create_temp();
+							codeNode *node = new codeNode;
+							node->code=std::string(".< ")+$2->name+std::string("\n");
+							node->name=temp;
+							$$=node;
+						}
+                |READ Ident L_SQUARE_BRACKE Expression R_SQUARE_BRACKET SEMICOLON Statement1 {
+													std::string temp = create_temp();
+													codeNode *node = new codeNode;
+													node->code=std::string(",[]< ")+$2->name+std::string(", ")+$4->code+std::string("\n");
+													node->name=temp;
+													$$=node;
+												}
+		|WRITE Ident SEMICOLON Statement1 {
+                                                        std::string temp = create_temp();
+                                                        codeNode *node = new codeNode;
+                                                        node->code=std::string(".> ")+$2->name+std::string("\n");
+                                                        node->name=temp;
+                                                        $$=node;
+                                                }
+                |WRITE Ident L_SQUARE_BRACKE Expression R_SQUARE_BRACKET SEMICOLON Statement1 {
+                                                                                                        std::string temp = create_temp();
+                                                                                                        codeNode *node = new codeNode;
+                                                                                                        node->code=std::string(",[]> ")+$2->name+std::string(", ")+$4->code+std::string("\n");
+                                                                                                        node->name=temp;
+                                                                                                        $$=node;
+												}
 		|CONTINUE SEMICOLON Statement1 {printf("Statement->CONTINUE SEMICOLON Statement1\n");}
 		|BREAK SEMICOLON Statement1 {printf("Statement->BREAK SEMICOLON Statement1\n");}
 		|RETURN Expression SEMICOLON Statement1 {printf("Statement->RETURN Expression SEMICOLON Statement1\n");}
@@ -125,9 +159,35 @@ Statement1:	{printf("Statement1->Epsilon\n");}
                 |IF Bool-Exp THEN Statement ELSE Statement ENDIF SEMICOLON Statement1 {printf("Statement1->IF Bool-Exp THEN Statement ELSE Statement ENDIF SEMICOLON Statment1\n");}
                 |WHILE Bool-Exp BEGINLOOP Statement ENDLOOP SEMICOLON Statement1 {printf("Statement1->WHILE Bool-Exp BEGINLOOP Statement ENDLOOP SEMICOLON Statement1\n");}
                 |DO BEGINLOOP Statement ENDLOOP WHILE Bool-Exp SEMICOLON Statement1 {printf("Statement1->DO BEGINLOOP Statement ENDLOOP WHILE Bool-Exp SEMICOLON Statement1\n");}
-                |READ Var SEMICOLON Statement1 {printf("Statement1->READ Var SEMICOLON Statement1\n");}
-                |WRITE Var SEMICOLON Statement1 {printf("Statement1->WRITE Var SEMICOLON Statement1\n");}
-                |CONTINUE SEMICOLON Statement1 {printf("Statement1->CONTINUE SEMICOLON Statement1\n");}
+		|READ Ident SEMICOLON Statement1 {
+                                                        std::string temp = create_temp();
+                                                        codeNode *node = new codeNode;
+                                                        node->code=std::string(".< ")+$2->name;
+                                                        node->name=temp;
+                                                        $$=node;
+                                                }
+                |READ Ident L_SQUARE_BRACKE Expression R_SQUARE_BRACKET SEMICOLON Statement1 {
+                                                                                                        std::string temp = create_temp();
+                                                                                                        codeNode *node = new codeNode;
+                                                                                                        node->code=std::string(",[]< ")+$2->name+std::string(", ")+$4->code+std::string("\n");
+                                                                                                        node->name=temp;
+                                                                                                        $$=node;
+                                                                                                }
+                |WRITE Ident SEMICOLON Statement1 {
+                                                        std::string temp = create_temp();
+                                                        codeNode *node = new codeNode;
+                                                        node->code=std::string(".> ")+$2->name+std::string("\n");
+                                                        node->name=temp;
+                                                        $$=node;
+                                                }
+                |WRITE Ident L_SQUARE_BRACKE Expression R_SQUARE_BRACKET SEMICOLON Statement1 {
+                                                                                                        std::string temp = create_temp();
+                                                                                                        codeNode *node = new codeNode;
+                                                                                                        node->code=std::string(",[]> ")+$2->name+std::string(", ")+$4->code+std::string("\n");
+                                                                                                        node->name=temp;
+                                                                                                        $$=node;
+                                                                                                }
+                |CONTINUE SEMICOLON Statement1 {printf("Statement1-> CONITNUE SEMICOLON Statement1\n");}
                 |BREAK SEMICOLON Statement1 {printf("Statement1->BREAK SEMICOLON Statement1\n");}
                 |RETURN Expression SEMICOLON Statement1 {printf("Statement1->RETURN Expression SEMICOLON Statement1\n");}
 
