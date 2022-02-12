@@ -153,7 +153,10 @@ Statement: 	Var ASSIGN Expression SEMICOLON Statement1 {
 		|CONTINUE SEMICOLON Statement1 {printf("Statement->CONTINUE SEMICOLON Statement1\n");}
 		|BREAK SEMICOLON Statement1 {printf("Statement->BREAK SEMICOLON Statement1\n");}
 		|RETURN Expression SEMICOLON Statement1 {//return src 
-							}
+			codeNode *node = new codeNode;
+			node->code = std::string("ret ")+$2->name+std::string("\n")+$4->code;;
+			$$ = code;
+		}
 
 Statement1:	{printf("Statement1->Epsilon\n");}
 		|Ident ASSIGN Expression SEMICOLON Statement1 {
@@ -199,7 +202,7 @@ Statement1:	{printf("Statement1->Epsilon\n");}
                                                         node->name=temp;
                                                         $$=node;
                                                 }
-                |WRITE Ident L_SQUARE_BRACKE Expression R_SQUARE_BRACKET SEMICOLON Statement1 {
+                |WRITE Ident L_SQUARE_BRACKET Expression R_SQUARE_BRACKET SEMICOLON Statement1 {
                                                                                                         std::string temp = create_temp();
                                                                                                         codeNode *node = new codeNode;
                                                                                                         node->code=std::string(",[]> ")+$2->name+std::string(", ")+$4->code+std::string("\n")+$7->code;
@@ -311,7 +314,12 @@ Var:
 				
 			}
     		| Ident L_SQUARE_BRACKET Expression R_SQUARE_BRACKET {//array access statement store temp to return temp register
-		}
+				std::string temp = create_temp();
+                codeNode *node = new codeNode;
+                node->code=std::string(",[]> ")+$1->name+std::string(", ")+$3->code+std::string("\n");
+                node->name=temp;
+                $$=node;//Just copied pasted with some slight adjustments from thomas implementation
+			}
     		;
 
 Ident:/*We need to check this for sure*/
