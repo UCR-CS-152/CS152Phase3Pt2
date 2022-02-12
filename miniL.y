@@ -279,7 +279,7 @@ Term:		Var{//return temp register
 			}
 		|NUMBER{//return number;
 			codeNode *node = new codeNode;
-			node->code = $1 -> code;//using immediate valye so i think i can just stop after this
+			node->code = $1 -> code;//using immediate value so i think i can just stop after this
 			$$ = node;
 			}
 		|L_PAREN Expression R_PAREN{//return expression
@@ -291,10 +291,10 @@ Term:		Var{//return temp register
 						}
 		|Ident L_PAREN Expression1 R_PAREN{//function call
 			codeNode *node = new codeNode;
-			std::string dest = create_temp();
+			std::string temp = create_temp();
 			node->code+=std::string("call ") + $1->name + std::string("\n");
-			node->name = dest;
-			$$ = node;// I have no clue wat im doing for this one
+			node->name = temp;
+			$$ = node;// I have no clue wat im doing for this one, also i think we missing a grammar rule bc table says call name, dest
 		}
 
 Expression1: 	{printf("Expression1->Epsilon\n");}
