@@ -226,7 +226,7 @@ Expression:	Multiplicative-Expr{printf("Expression->Multiplicative-Expr\n");}
 		|Multiplicative-Expr PLUS Multiplicative-Expr{
 			std::string temp = create_temp();
 			codeNode *node = new codeNode;
-			node->code = $1->code + $3->code + decl_temp_code(temp);
+			node->code = $1->code + $3->code;
 			node->code += std::string("+ ") + temp + std::string(", ") + $1->name + std::string(", ") + $3->name + std::string("\n");
 			node->name = temp;
 			$$ = node;
@@ -234,7 +234,7 @@ Expression:	Multiplicative-Expr{printf("Expression->Multiplicative-Expr\n");}
 		|Multiplicative-Expr MINUS Multiplicative-Expr{
 			std::string temp = create_temp();
 			codeNode *node = new codeNode;
-			node->code = $1->code + $3->code + decl_temp_code(temp);
+			node->code = $1->code + $3->code;
 			node->code += std::string("- ") + temp + std::string(", ") + $1->name + std::string(", ") + $3->name + std::string("\n");
 			node->name = temp;
 			$$ = node;
@@ -244,7 +244,7 @@ Multiplicative-Expr: 	Term {printf("%d\n", $1);}
 			|Term MULT Term {
 				std::string temp = create_temp();
 				codeNode *node = new codeNode;
-				node->code = $1->code + $3->code + decl_temp_code(temp);
+				node->code = $1->code + $3->code;
 				node->code += std::string("* ") + temp + std::string(", ") + $1->name + std::string(", ") + $3->name + std::string("\n");
 				node->name = temp;
 				$$ = node;
@@ -252,7 +252,7 @@ Multiplicative-Expr: 	Term {printf("%d\n", $1);}
 			|Term DIV Term {
 				std::string temp = create_temp();
 				codeNode *node = new codeNode;
-				node->code = $1->code + $3->code + decl_temp_code(temp);
+				node->code = $1->code + $3->code;
 				node->code += std::string("/ ") + temp + std::string(", ") + $1->name + std::string(", ") + $3->name + std::string("\n");
 				node->name = temp;
 				$$ = node;
@@ -260,7 +260,7 @@ Multiplicative-Expr: 	Term {printf("%d\n", $1);}
 			|Term MOD Term {
 				std::string temp = create_temp();
 				codeNode *node = new codeNode;
-				node->code = $1->code + $3->code + decl_temp_code(temp);
+				node->code = $1->code + $3->code;
 				node->code += std::string("% ") + temp + std::string(", ") + $1->name + std::string(", ") + $3->name + std::string("\n");
 				node->name = temp;
 				$$ = node;
@@ -269,7 +269,7 @@ Multiplicative-Expr: 	Term {printf("%d\n", $1);}
 Term:		Var{//return temp register
 				std::string temp = create_temp();
 				codeNode *node = new codeNode;
-				node->code = $1->code + decl_temp_code(temp);
+				node->code = $1->code;
 				node->code += std::string(". ") + temp + std::string("\n");
 				node->name = temp;
 				$$ = node;
@@ -280,10 +280,19 @@ Term:		Var{//return temp register
 			$$ = node;
 			}
 		|L_PAREN Expression R_PAREN{//return expression
-			
+			std::string temp = create_temp();
+			codeNode *node = new codeNode;
+			node->code = $2 -> code;// don't need to do the node->code+= stuff as substuff of expression takes care of that
+			node->name = temp;
+			$$ = node;
 						}
 		|Ident L_PAREN Expression1 R_PAREN{//function call
-	}
+			codeNode *node = new codeNode;
+			std::string dest = create_temp();
+			node->code+=std::string("call ") + $1->name + std::string("\n");
+			node->name = dest;
+			$$ = node;// I have no clue wat im doing for this one
+		}
 
 Expression1: 	{printf("Expression1->Epsilon\n");}
 		|Expression{printf("Expression1->Expression\n");}
