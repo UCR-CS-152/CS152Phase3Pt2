@@ -95,8 +95,9 @@ Declaration: 	{printf("Declaration->Epsilon\n");}
 								}
 		|Ident COLON ARRAY L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET OF INTEGER SEMICOLON Declaration{
 								codeNode *node = new codeNode;
-                                                                node->code=$1->code;
-                                                                node->code+= std::string(".[] ")+$1->name+std::string(", ")+std::to_string($5)+std::string("\n")+$10->code;
+                                node->code=$1->code;
+                                node->code+= std::string(".[] ")+$1->name+std::string(", ")+std::to_string($5)+std::string("\n")+$10->code;
+								$$ = node;
 								}
 		;
 
