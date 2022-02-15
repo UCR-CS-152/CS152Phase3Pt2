@@ -95,8 +95,9 @@ Declaration: 	{printf("Declaration->Epsilon\n");}
 								}
 		|Ident COLON ARRAY L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET OF INTEGER SEMICOLON Declaration{
 								codeNode *node = new codeNode;
-                                                                node->code=$1->code;
-                                                                node->code+= std::string(".[] ")+$1->name+std::string(", ")+std::to_string($5)+std::string("\n")+$10->code;
+                                node->code=$1->code;
+                                node->code+= std::string(".[] ")+$1->name+std::string(", ")+std::to_string($5)+std::string("\n")+$10->code;
+								$$ = node;
 								}
 		;
 
@@ -153,7 +154,10 @@ Statement: 	Var ASSIGN Expression SEMICOLON Statement1 {
 		|CONTINUE SEMICOLON Statement1 {printf("Statement->CONTINUE SEMICOLON Statement1\n");}
 		|BREAK SEMICOLON Statement1 {printf("Statement->BREAK SEMICOLON Statement1\n");}
 		|RETURN Expression SEMICOLON Statement1 {//return src 
-							}
+			codeNode *node = new codeNode;
+			node->code = std::string("ret ")+$2->name+std::string("\n")+$4->code;;
+			$$ = code;
+		}
 
 Statement1:	{printf("Statement1->Epsilon\n");}
 		|Ident ASSIGN Expression SEMICOLON Statement1 {
@@ -199,7 +203,7 @@ Statement1:	{printf("Statement1->Epsilon\n");}
                                                         node->name=temp;
                                                         $$=node;
                                                 }
-                |WRITE Ident L_SQUARE_BRACKE Expression R_SQUARE_BRACKET SEMICOLON Statement1 {
+                |WRITE Ident L_SQUARE_BRACKET Expression R_SQUARE_BRACKET SEMICOLON Statement1 {
                                                                                                         std::string temp = create_temp();
                                                                                                         codeNode *node = new codeNode;
                                                                                                         node->code=std::string(",[]> ")+$2->name+std::string(", ")+$4->code+std::string("\n")+$7->code;
@@ -226,7 +230,7 @@ Expression:	Multiplicative-Expr{printf("Expression->Multiplicative-Expr\n");}
 		|Multiplicative-Expr PLUS Multiplicative-Expr{
 			std::string temp = create_temp();
 			codeNode *node = new codeNode;
-			node->code = $1->code + $3->code + decl_temp_code(temp);
+			node->code = $1->code + $3->code;
 			node->code += std::string("+ ") + temp + std::string(", ") + $1->name + std::string(", ") + $3->name + std::string("\n");
 			node->name = temp;
 			$$ = node;
@@ -234,7 +238,7 @@ Expression:	Multiplicative-Expr{printf("Expression->Multiplicative-Expr\n");}
 		|Multiplicative-Expr MINUS Multiplicative-Expr{
 			std::string temp = create_temp();
 			codeNode *node = new codeNode;
-			node->code = $1->code + $3->code + decl_temp_code(temp);
+			node->code = $1->code + $3->code;
 			node->code += std::string("- ") + temp + std::string(", ") + $1->name + std::string(", ") + $3->name + std::string("\n");
 			node->name = temp;
 			$$ = node;
@@ -244,7 +248,7 @@ Multiplicative-Expr: 	Term {printf("%d\n", $1);}
 			|Term MULT Term {
 				std::string temp = create_temp();
 				codeNode *node = new codeNode;
-				node->code = $1->code + $3->code + decl_temp_code(temp);
+				node->code = $1->code + $3->code;
 				node->code += std::string("* ") + temp + std::string(", ") + $1->name + std::string(", ") + $3->name + std::string("\n");
 				node->name = temp;
 				$$ = node;
@@ -252,7 +256,7 @@ Multiplicative-Expr: 	Term {printf("%d\n", $1);}
 			|Term DIV Term {
 				std::string temp = create_temp();
 				codeNode *node = new codeNode;
-				node->code = $1->code + $3->code + decl_temp_code(temp);
+				node->code = $1->code + $3->code;
 				node->code += std::string("/ ") + temp + std::string(", ") + $1->name + std::string(", ") + $3->name + std::string("\n");
 				node->name = temp;
 				$$ = node;
@@ -260,20 +264,39 @@ Multiplicative-Expr: 	Term {printf("%d\n", $1);}
 			|Term MOD Term {
 				std::string temp = create_temp();
 				codeNode *node = new codeNode;
-				node->code = $1->code + $3->code + decl_temp_code(temp);
+				node->code = $1->code + $3->code;
 				node->code += std::string("% ") + temp + std::string(", ") + $1->name + std::string(", ") + $3->name + std::string("\n");
 				node->name = temp;
 				$$ = node;
 			}
 
 Term:		Var{//return temp register
+				std::string temp = create_temp();
+				codeNode *node = new codeNode;
+				node->code = $1->code;
+				node->code += std::string(". ") + temp + std::string("\n");
+				node->name = temp;
+				$$ = node;
 			}
 		|NUMBER{//return number;
+			codeNode *node = new codeNode;
+			node->code = $1 -> code;//using immediate value so i think i can just stop after this
+			$$ = node;
 			}
 		|L_PAREN Expression R_PAREN{//return expression
+			std::string temp = create_temp();
+			codeNode *node = new codeNode;
+			node->code = $2 -> code;// don't need to do the node->code+= stuff as substuff of expression takes care of that
+			node->name = temp;
+			$$ = node;
 						}
 		|Ident L_PAREN Expression1 R_PAREN{//function call
-	}
+			codeNode *node = new codeNode;
+			std::string temp = create_temp();
+			node->code+=std::string("call ") + $1->name + std::string("\n");
+			node->name = temp;
+			$$ = node;// I have no clue wat im doing for this one, also i think we missing a grammar rule bc table says call name, dest
+		}
 
 Expression1: 	{printf("Expression1->Epsilon\n");}
 		|Expression{printf("Expression1->Expression\n");}
@@ -292,7 +315,12 @@ Var:
 				
 			}
     		| Ident L_SQUARE_BRACKET Expression R_SQUARE_BRACKET {//array access statement store temp to return temp register
-		}
+				std::string temp = create_temp();
+                codeNode *node = new codeNode;
+                node->code=std::string(",[]> ")+$1->name+std::string(", ")+$3->code+std::string("\n");
+                node->name=temp;
+                $$=node;//Just copied pasted with some slight adjustments from thomas implementation
+			}
     		;
 
 Ident:/*We need to check this for sure*/
