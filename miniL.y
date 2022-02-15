@@ -81,6 +81,8 @@ Program:		/* empty */{printf("Program->Epsilon\n");}
 	 };
 FUNCTIONS: FUNCTION Ident SEMICOLON BEGIN_PARAMS Declaration END_PARAMS BEGIN_LOCALS Declaration END_LOCALS BEGIN_BODY Statement END_BODY {
 	codeNode *node = new codeNode;
+	stack<int> holdParams;
+	holdParams.push($5); //Prolly wrong but all i got rn
 	node->code = $2->code;
 	node->code += std::string("func ") + $2->name + std::string("\n")+$5->code+$8->code+$11->code;
 	$$ = node;
