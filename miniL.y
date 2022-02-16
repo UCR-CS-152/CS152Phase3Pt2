@@ -212,7 +212,11 @@ Statement1:	{printf("Statement1->Epsilon\n");}
                                                                                                 }
                 |CONTINUE SEMICOLON Statement1 {printf("Statement1-> CONITNUE SEMICOLON Statement1\n");}
                 |BREAK SEMICOLON Statement1 {printf("Statement1->BREAK SEMICOLON Statement1\n");}
-                |RETURN Expression SEMICOLON Statement1 {printf("Statement1->RETURN Expression SEMICOLON Statement1\n");}
+                |RETURN Expression SEMICOLON Statement1 {//return src
+                        codeNode *node = new codeNode;
+                        node->code = std::string("ret ")+$2->name+std::string("\n")+$4->code;;
+                        $$ = code;
+			}
 
 Bool-Exp:	NotLoop Expression Comp Expression {printf("Bool-Exp->NotLoop Expression Comp Expression\n");}	
 
@@ -226,7 +230,7 @@ Comp:		EQ{printf("Comp->EQ\n");}
 		|GTE{printf("Comp->GET\n");}
 		|LTE{printf("Comp->LTE\n");}
 
-Expression:	Multiplicative-Expr{printf("Expression->Multiplicative-Expr\n");}
+Expression:	Multiplicative-Expr{printf($$=$1;//not sure if this is correct but I think it is needed}
 		|Multiplicative-Expr PLUS Multiplicative-Expr{
 			std::string temp = create_temp();
 			codeNode *node = new codeNode;
@@ -293,14 +297,16 @@ Term:		Var{//return temp register
 		|Ident L_PAREN Expression1 R_PAREN{//function call
 			codeNode *node = new codeNode;
 			std::string temp = create_temp();
-			node->code+=std::string("call ") + $1->name + std::string("\n");
+			node->code+=$3->code+std::string("call ") + $1->name +std::string(", ")+ temp+ std::string("\n");
 			node->name = temp;
-			$$ = node;// I have no clue wat im doing for this one, also i think we missing a grammar rule bc table says call name, dest
+			$$ = node;// I have no clue wat im doing for this one, also i think we missing a grammar rule bc table says call name, dest changed so that the dest is the temp name that it is returned to
 		}
 
 Expression1: 	{printf("Expression1->Epsilon\n");}
 		|Expression{printf("Expression1->Expression\n");}
-		|Expression COMMA Expression1 {printf("Expression1->Expression COMMA Expression1\n");}
+		|Expression COMMA Expression1 {
+						//implement the param name here I think, maybe create something else in the Ident L_PAREN Expressio1 R_PAREN, like expression2 specifically for function calls
+						}
 
 Var:
     		Ident{
