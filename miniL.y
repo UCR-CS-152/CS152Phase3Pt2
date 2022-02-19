@@ -149,7 +149,7 @@ FUNCTIONS: FUNCTION Ident SEMICOLON BEGIN_PARAMS Declaration END_PARAMS BEGIN_LO
 	int array_count=0;
 	for(int i=0;i<f->declarations.size();i++){
 			if(f->declarations[i]->type!=Array)
-			assigmnets+=std::string("= ")+f->dclarations[i]->name+std::string(", $")+std::to_string(i-array_count)+std::string("\n");
+			assingmnets+=std::string("= ")+f->dclarations[i]->name+std::string(", $")+std::to_string(i-array_count)+std::string("\n");
 			else array_count++;
 			}
 	codeNode *node = new codeNode;
@@ -180,7 +180,7 @@ Declaration: 	{printf("Declaration->Epsilon\n");}
 Statement: 	Var ASSIGN Expression SEMICOLON Statement1 {
 			std::string var_name = $1;
 			std::string error;
-			if(!find(node->name, Integer, error)){
+			if(!find(var_name)){
 				yyerror(error.c_str());
 			}
 			codeNode *node = new codeNode;
@@ -189,12 +189,15 @@ Statement: 	Var ASSIGN Expression SEMICOLON Statement1 {
 			$$ = node;
 		}
                 |Ident L_SQUARE_BRACKET Expression R_SQUARE_BRACKET ASSIGN Experession SEMICOLON Statement1{
-                                                                                                                std::string array_name= $1->name;
-                                                                                                                codeNode *node = new codeNode;
-                                                                                                                node->code=$3->code + $6->code;
-                                                                                                                node->code=std::string("[]= ")+ array_name+std::string(", ")+$3->name+std::string(", ")+$6->name+std::string("\n")+$9->code;
-                                                                                                                $$=node;
-                                                                                                                }
+                    std::string array_name= $1->name;
+                    codeNode *node = new codeNode;
+					if(!find(array_name)){
+						yyerror(error.c_str());
+					}
+					node->code=$3->code + $6->code;
+					node->code=std::string("[]= ")+ array_name+std::string(", ")+$3->name+std::string(", ")+$6->name+std::string("\n")+$9->code;
+					$$=node;
+                }
 		|IF Bool-Exp THEN Statement ENDIF SEMICOLON Statement1 {printf("Statement->IF Bool-Exp THEN Statement ENDIF SEMICOLON Statment1\n");}
 		|IF Bool-Exp THEN Statement ELSE Statement ENDIF SEMICOLON Statement1 {printf("Statement->IF Bool-Exp THEN Statement ELSE Statement ENDIF SEMICOLON Statment1\n");}
 		|WHILE Bool-Exp BEGINLOOP Statement ENDLOOP SEMICOLON Statement1 {printf("Statement->WHILE Bool-Exp BEGINLOOP Statement ENDLOOP SEMICOLON Statement1\n");}
@@ -202,6 +205,9 @@ Statement: 	Var ASSIGN Expression SEMICOLON Statement1 {
 		|READ Ident SEMICOLON Statement1 {
 							std::string temp = create_temp();
 							codeNode *node = new codeNode;
+							if(!find($2->name)){
+								yyerror(error.c_str());
+							}
 							node->code=std::string(".< ")+$2->name+std::string("\n")+$4->code;
 							node->name=temp;
 							$$=node;
@@ -209,6 +215,9 @@ Statement: 	Var ASSIGN Expression SEMICOLON Statement1 {
                 |READ Ident L_SQUARE_BRACKE Expression R_SQUARE_BRACKET SEMICOLON Statement1 {
 													std::string temp = create_temp();
 													codeNode *node = new codeNode;
+													if(!find($2->name)){
+														yyerror(error.c_str());
+													}
 													node->code=std::string(",[]< ")+$2->name+std::string(", ")+$4->code+std::string("\n")+$7->code;
 													node->name=temp;
 													$$=node;
@@ -306,7 +315,7 @@ Comp:		EQ{printf("Comp->EQ\n");}
 		|GTE{printf("Comp->GET\n");}
 		|LTE{printf("Comp->LTE\n");}
 
-Expression:	Multiplicative-Expr{printf($$=$1;//not sure if this is correct but I think it is needed}
+Expression:	Multiplicative-Expr{//not sure if this is correct but I think it is needed}
 		|Multiplicative-Expr PLUS Multiplicative-Expr{
 			std::string temp = create_temp();
 			codeNode *node = new codeNode;
@@ -373,6 +382,9 @@ Term:		Var{//return temp register
 		|Ident L_PAREN Expression2 R_PAREN{//function call
 			codeNode *node = new codeNode;
 			std::string temp = create_temp();
+			if(!find($1->name)){
+				yyerror(error.c_str());
+			}
 			node->code+=$3->code+std::string("call ") + $1->name +std::string(", ")+ temp+ std::string("\n");
 			node->name = temp;
 			$$ = node;// I have no clue wat im doing for this one, also i think we missing a grammar rule bc table says call name, dest changed so that the dest is the temp name that it is returned to
@@ -381,8 +393,8 @@ Term:		Var{//return temp register
 Expression1: 	{}
 		|Expression{
 				codeNode *node=new codeNode;
-                                node->code=std::string("param ")+$1->name+std::string("\n");
-                                $$=node;
+                node->code=std::string("param ")+$1->name+std::string("\n");
+                $$=node;
 }
 
 Expression2: 	{}
@@ -403,16 +415,18 @@ Var:
 				codeNode *node = new codeNode;
 				node->code = "";
 				node->name = $1->name;
-				//std::string error;
-				//if(!find(node->name, Integer, error)){
-				//	yyerror(error.c_str());
-				//}
+				if(!find(node->name)){
+					yyerror(error.c_str());
+				}
 				$$ = node;
 				
 			}
     		| Ident L_SQUARE_BRACKET Expression R_SQUARE_BRACKET {//array access statement store temp to return temp register
 				std::string temp = create_temp();
                 codeNode *node = new codeNode;
+				if(!find($1->name)){
+					yyerror(error.c_str());
+				}
                 node->code=std::string(",[]> ")+$1->name+std::string(", ")+$3->code+std::string("\n");
                 node->name=temp;
                 $$=node;//Just copied pasted with some slight adjustments from thomas implementation
@@ -425,9 +439,10 @@ Ident:/*We need to check this for sure*/
 			node->code = "";
 			node->name = $1;
 			std::string error;
-			if(!find(node->name, Integer, error)){
+			if(!find(node->name)){
 				yyerror(error.c_str());
 			}
+			std::string error;
 			$$ = node;
 		}
 %% 
