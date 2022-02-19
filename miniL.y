@@ -1,6 +1,9 @@
 %{
   #include <stdio.h>
   #include <stdlib.h>
+  #include <string>
+  #include <vector>
+  #include <string.h>
   extern FILE * yyin;
   extern int  numLines;
   extern int numColumns;
@@ -12,6 +15,66 @@
 	  std::string code;
 	  std::string name;
   }
+char *identToken;
+int numberToken;
+int  count_names = 0;
+
+
+enum Type { Integer, Array };
+struct Symbol {
+  std::string name;
+  Type type;
+};
+struct Function {
+  std::string name;
+  std::vector<Symbol> declarations;
+};
+
+std::vector <Function> symbol_table;
+
+
+Function *get_function() {
+  int last = symbol_table.size()-1;
+  return &symbol_table[last];
+}
+
+bool find(std::string &value) {
+  Function *f = get_function();
+  for(int i=0; i < f->declarations.size(); i++) {
+    Symbol *s = &f->declarations[i];
+    if (s->name == value) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void add_function_to_symbol_table(std::string &value) {
+  Function f; 
+  f.name = value; 
+  symbol_table.push_back(f);
+}
+
+void add_variable_to_symbol_table(std::string &value, Type t) {
+  Symbol s;
+  s.name = value;
+  s.type = t;
+  Function *f = get_function();
+  f->declarations.push_back(s);
+}
+
+void print_symbol_table(void) {
+  printf("symbol table:\n");
+  printf("--------------------\n");
+  for(int i=0; i<symbol_table.size(); i++) {
+    printf("function: %s\n", symbol_table[i].name.c_str());
+    for(int j=0; j<symbol_table[i].declarations.size(); j++) {
+      printf("  locals: %s\n", symbol_table[i].declarations[j].name.c_str());
+    }
+  }
+  printf("--------------------\n");
+}
+
 %}
 
 %union{
@@ -80,23 +143,34 @@ Program:		/* empty */{printf("Program->Epsilon\n");}
 		$$=node;
 	 };
 FUNCTIONS: FUNCTION Ident SEMICOLON BEGIN_PARAMS Declaration END_PARAMS BEGIN_LOCALS Declaration END_LOCALS BEGIN_BODY Statement END_BODY {
+	add_function_to_symbol_table($2->name);
+	std::string assignments="";
+	Function *f=get_function();
+	int array_count=0;
+	for(int i=0;i<f->declarations.size();i++){
+			if(f->declarations[i]->type!=Array)
+			assigmnets+=std::string("= ")+f->dclarations[i]->name+std::string(", $")+std::to_string(i-array_count)+std::string("\n");
+			else array_count++;
+			}
 	codeNode *node = new codeNode;
-	stack<int> holdParams;
-	holdParams.push($5); //Prolly wrong but all i got rn
 	node->code = $2->code;
-	node->code += std::string("func ") + $2->name + std::string("\n")+$5->code+$8->code+$11->code;
+	node->code += std::string("func ") + $2->name + std::string("\n")+$5->code+assignments+$8->code+$11->code;
 	$$ = node;
 }
 
 Declaration: 	{printf("Declaration->Epsilon\n");}
 		|Ident COLON INTEGER SEMICOLON Declaration {
+								Type t=Integer;
+								add_variable_to_symbol_table($1->name,t);
 								codeNode *node = new codeNode;
 								node->code=$1->code;
 								node->code+= std::string(". ")+$1->name+std::string("\n")+$5->code;
 								$$=node;
 								}
 		|Ident COLON ARRAY L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET OF INTEGER SEMICOLON Declaration{
-								codeNode *node = new codeNode;
+				Type t=Array
+				add_variable_to_symbol_table($1->name,t);				
+				codeNode *node = new codeNode;
                                 node->code=$1->code;
                                 node->code+= std::string(".[] ")+$1->name+std::string(", ")+std::to_string($5)+std::string("\n")+$10->code;
 								$$ = node;
@@ -214,7 +288,11 @@ Statement1:	{printf("Statement1->Epsilon\n");}
                                                                                                 }
                 |CONTINUE SEMICOLON Statement1 {printf("Statement1-> CONITNUE SEMICOLON Statement1\n");}
                 |BREAK SEMICOLON Statement1 {printf("Statement1->BREAK SEMICOLON Statement1\n");}
-                |RETURN Expression SEMICOLON Statement1 {printf("Statement1->RETURN Expression SEMICOLON Statement1\n");}
+                |RETURN Expression SEMICOLON Statement1 {//return src
+                        codeNode *node = new codeNode;
+                        node->code = std::string("ret ")+$2->name+std::string("\n")+$4->code;;
+                        $$ = code;
+			}
 
 Bool-Exp:	NotLoop Expression Comp Expression {printf("Bool-Exp->NotLoop Expression Comp Expression\n");}	
 
@@ -228,7 +306,7 @@ Comp:		EQ{printf("Comp->EQ\n");}
 		|GTE{printf("Comp->GET\n");}
 		|LTE{printf("Comp->LTE\n");}
 
-Expression:	Multiplicative-Expr{printf("Expression->Multiplicative-Expr\n");}
+Expression:	Multiplicative-Expr{printf($$=$1;//not sure if this is correct but I think it is needed}
 		|Multiplicative-Expr PLUS Multiplicative-Expr{
 			std::string temp = create_temp();
 			codeNode *node = new codeNode;
@@ -292,17 +370,33 @@ Term:		Var{//return temp register
 			node->name = temp;
 			$$ = node;
 						}
-		|Ident L_PAREN Expression1 R_PAREN{//function call
+		|Ident L_PAREN Expression2 R_PAREN{//function call
 			codeNode *node = new codeNode;
 			std::string temp = create_temp();
-			node->code+=std::string("call ") + $1->name + std::string("\n");
+			node->code+=$3->code+std::string("call ") + $1->name +std::string(", ")+ temp+ std::string("\n");
 			node->name = temp;
-			$$ = node;// I have no clue wat im doing for this one, also i think we missing a grammar rule bc table says call name, dest
+			$$ = node;// I have no clue wat im doing for this one, also i think we missing a grammar rule bc table says call name, dest changed so that the dest is the temp name that it is returned to
 		}
 
-Expression1: 	{printf("Expression1->Epsilon\n");}
-		|Expression{printf("Expression1->Expression\n");}
-		|Expression COMMA Expression1 {printf("Expression1->Expression COMMA Expression1\n");}
+Expression1: 	{}
+		|Expression{
+				codeNode *node=new codeNode;
+                                node->code=std::string("param ")+$1->name+std::string("\n");
+                                $$=node;
+}
+
+Expression2: 	{}
+		|Expression{
+				codeNode *node=new codeNode;
+				node->code=std::string("param ")+$1->name+std::string("\n");
+				$$=node;
+}
+		|Expression COMMA Expression2{
+						codeNode *node = new codeNode;
+						node->code=std::string("param ")+$1->name+std::string("\n")+$3->code;
+						$$=node;
+						}
+
 
 Var:
     		Ident{
