@@ -81,6 +81,10 @@ void print_symbol_table(void) {
 %union{
   int		int_val;
   char*	op_val;
+  struct codeNode{
+		std::string code;
+		std::string name;
+		};
 }
 
 %start Program 
