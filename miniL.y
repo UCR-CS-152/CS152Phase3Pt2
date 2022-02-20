@@ -7,8 +7,9 @@
   extern FILE * yyin;
   extern int  numLines;
   extern int numColumns;
+  std::string error = "There looks like there is no definition";
   void yyerror(const char *msg) {
-    printf("Error at  Line %d:  Row: %d\n", numLines, numColumns);
+    printf("Error at Line %d:  Row: %d. %s\n", numLines, numColumns, msg);
   }
   int has_main = 0;
   struct codeNode{
@@ -131,11 +132,11 @@ void print_symbol_table(void) {
 %token GT
 %token LTE
 %token GTE
-
+%type <codeNode> Program FUNCTIONS Declaration Statement Statement1 Expression Multiplicative-Expr Term Expression2 Var Ident
 
 %%
 
-Program:		/* empty */{printf("Program->Epsilon\n");}
+Program:		/* empty */{}
     | FUNCTIONS Program	{ 
 		//idk bout this one
 		codeNode *node= new codeNode;
@@ -149,7 +150,7 @@ FUNCTIONS: FUNCTION Ident SEMICOLON BEGIN_PARAMS Declaration END_PARAMS BEGIN_LO
 	int array_count=0;
 	for(int i=0;i<f->declarations.size();i++){
 			if(f->declarations[i]->type!=Array)
-			assigmnets+=std::string("= ")+f->dclarations[i]->name+std::string(", $")+std::to_string(i-array_count)+std::string("\n");
+			assingmnets+=std::string("= ")+f->dclarations[i]->name+std::string(", $")+std::to_string(i-array_count)+std::string("\n");
 			else array_count++;
 			}
 	codeNode *node = new codeNode;
@@ -158,7 +159,7 @@ FUNCTIONS: FUNCTION Ident SEMICOLON BEGIN_PARAMS Declaration END_PARAMS BEGIN_LO
 	$$ = node;
 }
 
-Declaration: 	{printf("Declaration->Epsilon\n");}
+Declaration: 	{}
 		|Ident COLON INTEGER SEMICOLON Declaration {
 								Type t=Integer;
 								add_variable_to_symbol_table($1->name,t);
@@ -179,8 +180,7 @@ Declaration: 	{printf("Declaration->Epsilon\n");}
 
 Statement: 	Var ASSIGN Expression SEMICOLON Statement1 {
 			std::string var_name = $1;
-			std::string error;
-			if(!find(node->name, Integer, error)){
+			if(!find(var_name)){
 				yyerror(error.c_str());
 			}
 			codeNode *node = new codeNode;
@@ -188,27 +188,36 @@ Statement: 	Var ASSIGN Expression SEMICOLON Statement1 {
 			node->code += std::string("= ") + var_name + std::string(", ") + $3->name + std::string("\n")+$5->code;
 			$$ = node;
 		}
-                |Ident L_SQUARE_BRACKET Expression R_SQUARE_BRACKET ASSIGN Experession SEMICOLON Statement1{
-                                                                                                                std::string array_name= $1->name;
-                                                                                                                codeNode *node = new codeNode;
-                                                                                                                node->code=$3->code + $6->code;
-                                                                                                                node->code=std::string("[]= ")+ array_name+std::string(", ")+$3->name+std::string(", ")+$6->name+std::string("\n")+$9->code;
-                                                                                                                $$=node;
-                                                                                                                }
-		|IF Bool-Exp THEN Statement ENDIF SEMICOLON Statement1 {printf("Statement->IF Bool-Exp THEN Statement ENDIF SEMICOLON Statment1\n");}
-		|IF Bool-Exp THEN Statement ELSE Statement ENDIF SEMICOLON Statement1 {printf("Statement->IF Bool-Exp THEN Statement ELSE Statement ENDIF SEMICOLON Statment1\n");}
-		|WHILE Bool-Exp BEGINLOOP Statement ENDLOOP SEMICOLON Statement1 {printf("Statement->WHILE Bool-Exp BEGINLOOP Statement ENDLOOP SEMICOLON Statement1\n");}
-		|DO BEGINLOOP Statement ENDLOOP WHILE Bool-Exp SEMICOLON Statement1 {printf("Statement->DO BEGINLOOP Statement ENDLOOP WHILE Bool-Exp SEMICOLON Statement1\n");}
+                |Ident L_SQUARE_BRACKET Expression R_SQUARE_BRACKET ASSIGN Expression SEMICOLON Statement1{
+                    std::string array_name= $1->name;
+                    codeNode *node = new codeNode;
+					if(!find(array_name)){
+						yyerror(error.c_str());
+					}
+					node->code=$3->code + $6->code;
+					node->code=std::string("[]= ")+ array_name+std::string(", ")+$3->name+std::string(", ")+$6->name+std::string("\n")+$8->code;
+					$$=node;
+                }
+		|IF Bool-Exp THEN Statement ENDIF SEMICOLON Statement1 {}
+		|IF Bool-Exp THEN Statement ELSE Statement ENDIF SEMICOLON Statement1 {}
+		|WHILE Bool-Exp BEGINLOOP Statement ENDLOOP SEMICOLON Statement1 {}
+		|DO BEGINLOOP Statement ENDLOOP WHILE Bool-Exp SEMICOLON Statement1 {}
 		|READ Ident SEMICOLON Statement1 {
 							std::string temp = create_temp();
 							codeNode *node = new codeNode;
+							if(!find($2->name)){
+								yyerror(error.c_str());
+							}
 							node->code=std::string(".< ")+$2->name+std::string("\n")+$4->code;
 							node->name=temp;
 							$$=node;
 						}
-                |READ Ident L_SQUARE_BRACKE Expression R_SQUARE_BRACKET SEMICOLON Statement1 {
+                |READ Ident L_SQUARE_BRACKET Expression R_SQUARE_BRACKET SEMICOLON Statement1 {
 													std::string temp = create_temp();
 													codeNode *node = new codeNode;
+													if(!find($2->name)){
+														yyerror(error.c_str());
+													}
 													node->code=std::string(",[]< ")+$2->name+std::string(", ")+$4->code+std::string("\n")+$7->code;
 													node->name=temp;
 													$$=node;
@@ -216,26 +225,32 @@ Statement: 	Var ASSIGN Expression SEMICOLON Statement1 {
 		|WRITE Ident SEMICOLON Statement1 {
                                                         std::string temp = create_temp();
                                                         codeNode *node = new codeNode;
+														if(!find($2->name)){
+															yyerror(error.c_str());
+														}
                                                         node->code=std::string(".> ")+$2->name+std::string("\n")+$4->code;
                                                         node->name=temp;
                                                         $$=node;
                                                 }
-                |WRITE Ident L_SQUARE_BRACKE Expression R_SQUARE_BRACKET SEMICOLON Statement1 {
+                |WRITE Ident L_SQUARE_BRACKET Expression R_SQUARE_BRACKET SEMICOLON Statement1 {
                                                                                                         std::string temp = create_temp();
                                                                                                         codeNode *node = new codeNode;
+																										if(!find($2->name)){
+																											yyerror(error.c_str());
+																										}
                                                                                                         node->code=std::string(",[]> ")+$2->name+std::string(", ")+$4->code+std::string("\n")+$7->code;
                                                                                                         node->name=temp;
                                                                                                         $$=node;
 												}
-		|CONTINUE SEMICOLON Statement1 {printf("Statement->CONTINUE SEMICOLON Statement1\n");}
-		|BREAK SEMICOLON Statement1 {printf("Statement->BREAK SEMICOLON Statement1\n");}
+		|CONTINUE SEMICOLON Statement1 {}
+		|BREAK SEMICOLON Statement1 {}
 		|RETURN Expression SEMICOLON Statement1 {//return src 
 			codeNode *node = new codeNode;
 			node->code = std::string("ret ")+$2->name+std::string("\n")+$4->code;;
 			$$ = code;
 		}
 
-Statement1:	{printf("Statement1->Epsilon\n");}
+Statement1:	{}
 		|Ident ASSIGN Expression SEMICOLON Statement1 {
 					std::string var_name = $1->name;
 					std::string error;
@@ -247,27 +262,36 @@ Statement1:	{printf("Statement1->Epsilon\n");}
 					node->code += std::string("= ") + var_name + std::string(", ") + $3->name + std::string("\n")+$5->code;
 					$$ = node;
 				}
-		|Ident L_SQUARE_BRACKET Expression R_SQUARE_BRACKET ASSIGN Experession SEMICOLON Statement1{
+		|Ident L_SQUARE_BRACKET Expression R_SQUARE_BRACKET ASSIGN Expression SEMICOLON Statement1{
 														std::string array_name= $1->name;
 														codeNode *node = new codeNode;
+														if(!find(array_name)){
+															yyerror(error.c_str());
+														}
 														node->code=$3->code + $6->code;
-														node->code=std::string("[]= ")+ array_name+std::string(", ")+$3->name+std::string(", ")+$6->name+std::string("\n")+$9->code;
+														node->code=std::string("[]= ")+ array_name+std::string(", ")+$3->name+std::string(", ")+$6->name+std::string("\n")+$8->code;
 														$$=node;
 														}
-                |IF Bool-Exp THEN Statement ENDIF SEMICOLON Statement1 {printf("Statement1->IF Bool-Exp THEN Statement ENDIF SEMICOLON Statment1\n");}
-                |IF Bool-Exp THEN Statement ELSE Statement ENDIF SEMICOLON Statement1 {printf("Statement1->IF Bool-Exp THEN Statement ELSE Statement ENDIF SEMICOLON Statment1\n");}
-                |WHILE Bool-Exp BEGINLOOP Statement ENDLOOP SEMICOLON Statement1 {printf("Statement1->WHILE Bool-Exp BEGINLOOP Statement ENDLOOP SEMICOLON Statement1\n");}
-                |DO BEGINLOOP Statement ENDLOOP WHILE Bool-Exp SEMICOLON Statement1 {printf("Statement1->DO BEGINLOOP Statement ENDLOOP WHILE Bool-Exp SEMICOLON Statement1\n");}
-		|READ Ident SEMICOLON Statement1 {
+                |IF Bool-Exp THEN Statement ENDIF SEMICOLON Statement1 {}
+                |IF Bool-Exp THEN Statement ELSE Statement ENDIF SEMICOLON Statement1 {}
+                |WHILE Bool-Exp BEGINLOOP Statement ENDLOOP SEMICOLON Statement1 {}
+                |DO BEGINLOOP Statement ENDLOOP WHILE Bool-Exp SEMICOLON Statement1 {}
+				|READ Ident SEMICOLON Statement1 {
                                                         std::string temp = create_temp();
                                                         codeNode *node = new codeNode;
+														if(!find($2->name)){
+															yyerror(error.c_str());
+														}
                                                         node->code=std::string(".< ")+$2->name+std::string("\n")+$4->code;
                                                         node->name=temp;
                                                         $$=node;
                                                 }
-                |READ Ident L_SQUARE_BRACKE Expression R_SQUARE_BRACKET SEMICOLON Statement1 {
+                |READ Ident L_SQUARE_BRACKET Expression R_SQUARE_BRACKET SEMICOLON Statement1 {
                                                                                                         std::string temp = create_temp();
                                                                                                         codeNode *node = new codeNode;
+																										if(!find($2->name)){
+																											yyerror(error.c_str());
+																										}
                                                                                                         node->code=std::string(",[]< ")+$2->name+std::string(", ")+$4->code+std::string("\n")+$7->code;
                                                                                                         node->name=temp;
                                                                                                         $$=node;
@@ -275,6 +299,9 @@ Statement1:	{printf("Statement1->Epsilon\n");}
                 |WRITE Ident SEMICOLON Statement1 {
                                                         std::string temp = create_temp();
                                                         codeNode *node = new codeNode;
+														if(!find($2->name)){
+															yyerror(error.c_str());
+														}
                                                         node->code=std::string(".> ")+$2->name+std::string("\n")+$4->code;
                                                         node->name=temp;
                                                         $$=node;
@@ -282,31 +309,34 @@ Statement1:	{printf("Statement1->Epsilon\n");}
                 |WRITE Ident L_SQUARE_BRACKET Expression R_SQUARE_BRACKET SEMICOLON Statement1 {
                                                                                                         std::string temp = create_temp();
                                                                                                         codeNode *node = new codeNode;
+																										if(!find($2->name)){
+																											yyerror(error.c_str());
+																										}
                                                                                                         node->code=std::string(",[]> ")+$2->name+std::string(", ")+$4->code+std::string("\n")+$7->code;
                                                                                                         node->name=temp;
                                                                                                         $$=node;
                                                                                                 }
-                |CONTINUE SEMICOLON Statement1 {printf("Statement1-> CONITNUE SEMICOLON Statement1\n");}
-                |BREAK SEMICOLON Statement1 {printf("Statement1->BREAK SEMICOLON Statement1\n");}
+                |CONTINUE SEMICOLON Statement1 {}
+                |BREAK SEMICOLON Statement1 {}
                 |RETURN Expression SEMICOLON Statement1 {//return src
                         codeNode *node = new codeNode;
                         node->code = std::string("ret ")+$2->name+std::string("\n")+$4->code;;
                         $$ = code;
 			}
 
-Bool-Exp:	NotLoop Expression Comp Expression {printf("Bool-Exp->NotLoop Expression Comp Expression\n");}	
+Bool-Exp:	NotLoop Expression Comp Expression {}	
 
-NotLoop:	{printf("NotLoop->Epsilon\n");}
-		|NOT NotLoop{printf("NotLoop->NOT NotLoop\n");}
+NotLoop:	{}
+		|NOT NotLoop{}
 
-Comp:		EQ{printf("Comp->EQ\n");}
-		|NEQ{printf("Comp->NEQ\n");}
-		|GT{printf("Comp->GT\n");}
-		|LT{printf("Comp->LT\n");}
-		|GTE{printf("Comp->GET\n");}
-		|LTE{printf("Comp->LTE\n");}
+Comp:		EQ{}
+		|NEQ{}
+		|GT{}
+		|LT{}
+		|GTE{}
+		|LTE{}
 
-Expression:	Multiplicative-Expr{printf($$=$1;//not sure if this is correct but I think it is needed}
+Expression:	Multiplicative-Expr{$$=$1;}//not sure if this is correct but I think it is needed}
 		|Multiplicative-Expr PLUS Multiplicative-Expr{
 			std::string temp = create_temp();
 			codeNode *node = new codeNode;
@@ -353,6 +383,9 @@ Multiplicative-Expr: 	Term {printf("%d\n", $1);}
 Term:		Var{//return temp register
 				std::string temp = create_temp();
 				codeNode *node = new codeNode;
+				if(!find($1->name)){
+					yyerror(error.c_str());
+				}
 				node->code = $1->code;
 				node->code += std::string(". ") + temp + std::string("\n");
 				node->name = temp;
@@ -373,17 +406,14 @@ Term:		Var{//return temp register
 		|Ident L_PAREN Expression2 R_PAREN{//function call
 			codeNode *node = new codeNode;
 			std::string temp = create_temp();
+			if(!find($1->name)){
+				yyerror(error.c_str());
+			}
 			node->code+=$3->code+std::string("call ") + $1->name +std::string(", ")+ temp+ std::string("\n");
 			node->name = temp;
 			$$ = node;// I have no clue wat im doing for this one, also i think we missing a grammar rule bc table says call name, dest changed so that the dest is the temp name that it is returned to
 		}
 
-Expression1: 	{}
-		|Expression{
-				codeNode *node=new codeNode;
-                                node->code=std::string("param ")+$1->name+std::string("\n");
-                                $$=node;
-}
 
 Expression2: 	{}
 		|Expression{
@@ -403,16 +433,18 @@ Var:
 				codeNode *node = new codeNode;
 				node->code = "";
 				node->name = $1->name;
-				//std::string error;
-				//if(!find(node->name, Integer, error)){
-				//	yyerror(error.c_str());
-				//}
+				if(!find(node->name)){
+					yyerror(error.c_str());
+				}
 				$$ = node;
 				
 			}
     		| Ident L_SQUARE_BRACKET Expression R_SQUARE_BRACKET {//array access statement store temp to return temp register
 				std::string temp = create_temp();
                 codeNode *node = new codeNode;
+				if(!find($1->name)){
+					yyerror(error.c_str());
+				}
                 node->code=std::string(",[]> ")+$1->name+std::string(", ")+$3->code+std::string("\n");
                 node->name=temp;
                 $$=node;//Just copied pasted with some slight adjustments from thomas implementation
@@ -425,9 +457,10 @@ Ident:/*We need to check this for sure*/
 			node->code = "";
 			node->name = $1;
 			std::string error;
-			if(!find(node->name, Integer, error)){
+			if(!find(node->name)){
 				yyerror(error.c_str());
 			}
+			std::string error;
 			$$ = node;
 		}
 %% 
