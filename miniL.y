@@ -160,8 +160,8 @@ FUNCTIONS: FUNCTION Ident SEMICOLON BEGIN_PARAMS Declaration END_PARAMS BEGIN_LO
 	Function *f=get_function();
 	int array_count=0;
 	for(int i=0;i<f->declarations.size();i++){
-			if(f->declarations[i]->type!=Array)
-			assingmnets+=std::string("= ")+f->dclarations[i]->name+std::string(", $")+std::to_string(i-array_count)+std::string("\n");
+			if(f->declarations[i].type!=Array)
+			assignments+=std::string("= ")+f->declarations[i].name+std::string(", $")+std::to_string(i-array_count)+std::string("\n");
 			else array_count++;
 			}
 	codeNode *node = new codeNode;
@@ -180,7 +180,7 @@ Declaration: 	{}
 								$$=node;
 								}
 		|Ident COLON ARRAY L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET OF INTEGER SEMICOLON Declaration{
-				Type t=Array
+				Type t=Array;
 				add_variable_to_symbol_table($1->name,t);				
 				codeNode *node = new codeNode;
                                 node->code=$1->code;
@@ -190,7 +190,7 @@ Declaration: 	{}
 		;
 
 Statement: 	Ident ASSIGN Expression SEMICOLON Statement1 {
-			std::string var_name = $1;
+			std::string var_name = $1->name;
 			std::string error;
 			if(!find(var_name)){
 				yyerror(error.c_str());
@@ -259,14 +259,14 @@ Statement: 	Ident ASSIGN Expression SEMICOLON Statement1 {
 		|RETURN Expression SEMICOLON Statement1 {//return src 
 			codeNode *node = new codeNode;
 			node->code = std::string("ret ")+$2->name+std::string("\n")+$4->code;;
-			$$ = code;
+			$$ = node;
 		}
 
 Statement1:	{}
 		|Ident ASSIGN Expression SEMICOLON Statement1 {
 					std::string var_name = $1->name;
 					std::string error;
-					if(!find(node->name, Integer, error)){
+					if(!find(var_name)){//changed node->name to var_name
 						yyerror(error.c_str());
 					}
 					codeNode *node = new codeNode;
@@ -333,7 +333,7 @@ Statement1:	{}
                 |RETURN Expression SEMICOLON Statement1 {//return src
                         codeNode *node = new codeNode;
                         node->code = std::string("ret ")+$2->name+std::string("\n")+$4->code;;
-                        $$ = code;
+                        $$ = node;
 			}
 
 Bool-Exp:	NotLoop Expression Comp Expression {}	
@@ -405,7 +405,7 @@ Term:		Var{//return temp register
 			}
 		|NUMBER{//return number;
 			codeNode *node = new codeNode;
-			node->code = $1 -> code;//using immediate value so i think i can just stop after this
+			node->code = $1;//using immediate value so i think i can just stop after this
 			$$ = node;
 			}
 		|L_PAREN Expression R_PAREN{//return expression
@@ -468,11 +468,9 @@ Ident:/*We need to check this for sure*/
 			codeNode *node = new codeNode;
 			node->code = "";
 			node->name = $1;
-			std::string error;
 			if(!find(node->name)){
 				yyerror(error.c_str());
 			}
-			std::string error;
 			$$ = node;
 		}
 %% 
