@@ -81,10 +81,7 @@ void print_symbol_table(void) {
 %union{
   int		int_val;
   char*	op_val;
-  struct codeNode{
-		std::string code;
-		std::string name;
-		};
+  struct codeNode *node;
 }
 
 %start Program 
@@ -136,17 +133,17 @@ void print_symbol_table(void) {
 %token GT
 %token LTE
 %token GTE
-%type <codeNode> Program 
-%type <codeNode> FUNCTIONS 
-%type <codeNode> Declaration 
-%type <codeNode> Statement 
-%type <codeNode> Statement1 
-%type <codeNode> Expression 
-%type <codeNode> Multiplicative-Expr 
-%type <codeNode> Term 
-%type <codeNode> Expression2 
-%type <codeNode> Var 
-%type <codeNode> Ident
+%type <node> Program 
+%type <node> FUNCTIONS 
+%type <node> Declaration 
+%type <node> Statement 
+%type <node> Statement1 
+%type <node> Expression 
+%type <node> Multiplicative-Expr 
+%type <node> Term 
+%type <node> Expression2 
+%type <node> Var 
+%type <node> Ident
 
 %%
 
