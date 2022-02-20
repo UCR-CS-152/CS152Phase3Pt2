@@ -15,7 +15,7 @@
   struct codeNode{
 	  std::string code;
 	  std::string name;
-  }
+  };
 char *identToken;
 int numberToken;
 int  count_names = 0;
@@ -132,7 +132,17 @@ void print_symbol_table(void) {
 %token GT
 %token LTE
 %token GTE
-%type <codeNode> Program FUNCTIONS Declaration Statement Statement1 Expression Multiplicative-Expr Term Expression2 Var Ident
+%type <codeNode> Program 
+%type <codeNode> FUNCTIONS 
+%type <codeNode> Declaration 
+%type <codeNode> Statement 
+%type <codeNode> Statement1 
+%type <codeNode> Expression 
+%type <codeNode> Multiplicative-Expr 
+%type <codeNode> Term 
+%type <codeNode> Expression2 
+%type <codeNode> Var 
+%type <codeNode> Ident
 
 %%
 
@@ -178,8 +188,9 @@ Declaration: 	{}
 								}
 		;
 
-Statement: 	Var ASSIGN Expression SEMICOLON Statement1 {
+Statement: 	Ident ASSIGN Expression SEMICOLON Statement1 {
 			std::string var_name = $1;
+			std::string error;
 			if(!find(var_name)){
 				yyerror(error.c_str());
 			}
@@ -418,12 +429,12 @@ Term:		Var{//return temp register
 Expression2: 	{}
 		|Expression{
 				codeNode *node=new codeNode;
-				node->code=std::string("param ")+$1->name+std::string("\n");
+				node->code=$1->code+std::string("param ")+$1->name+std::string("\n");
 				$$=node;
 }
 		|Expression COMMA Expression2{
 						codeNode *node = new codeNode;
-						node->code=std::string("param ")+$1->name+std::string("\n")+$3->code;
+						node->code=$1->code+std::string("param ")+$1->name+std::string("\n")+$3->code;
 						$$=node;
 						}
 
