@@ -40,7 +40,7 @@ Function *get_function() {
   return &symbol_table[last];
 }
 
-bool find(std::string &value) {
+bool find(std::string value) {
   Function *f = get_function();
   for(int i=0; i < f->declarations.size(); i++) {
     Symbol *s = &f->declarations[i];
@@ -51,18 +51,18 @@ bool find(std::string &value) {
   return false;
 }
 
-void add_function_to_symbol_table(std::string &value) {
+void add_function_to_symbol_table(std::string value) {
   Function f; 
   f.name = value; 
   symbol_table.push_back(f);
 }
 
-void add_variable_to_symbol_table(std::string &value, Type t) {
+void add_variable_to_symbol_table(std::string value, Type t) {
   Symbol s;
   s.name = value;
   s.type = t;
-  Function *f = get_function();
-  f->declarations.push_back(s);
+  //Function *f = get_function();
+  //f->declarations.push_back(s);
 }
 
 void print_symbol_table(void) {
@@ -161,12 +161,12 @@ Program:		/* empty */{printf("start of Program->Epsilon\n");codeNode *node= new 
 		//printf("Functions Program\n");
 		$$=node;
 	 };
-FUNCTIONS: FUNCTION Ident SEMICOLON BEGIN_PARAMS Declaration END_PARAMS BEGIN_LOCALS Declaration END_LOCALS BEGIN_BODY Statement END_BODY {
+FUNCTIONS: FUNCTION Ident{add_function_to_symbol_table($2->name);} SEMICOLON BEGIN_PARAMS Declaration END_PARAMS BEGIN_LOCALS Declaration END_LOCALS BEGIN_BODY Statement END_BODY {
 	printf("Start of Functions->Function\n");
-	add_function_to_symbol_table($2->name);
-	std::string assignments="";
-	Function *f=get_function();
-	int array_count=0;
+	//add_function_to_symbol_table($2->name);
+	//std::string assignments="";
+	//Function *f=get_function();
+	//int array_count=0;
 	//for(int i=0;i<f->declarations.size();i++){
 	//		if(f->declarations[i].type!=Array)
 	//		assignments+=std::string("= ")+f->declarations[i].name+std::string(", $")+std::to_string(i-array_count)+std::string("\n");
@@ -174,15 +174,18 @@ FUNCTIONS: FUNCTION Ident SEMICOLON BEGIN_PARAMS Declaration END_PARAMS BEGIN_LO
 	//		}
 	codeNode *node = new codeNode;
 	node->code = $2->code;
-	node->code += std::string("func ") + $2->name + std::string("\n")+$5->code+assignments+$8->code+$11->code;
+	node->code += std::string("func ") + $2->name + std::string("\n")+$6->code+$9->code+$12->code;
 	$$ = node;
-}
+};
 
 Declaration: 	{printf("Start of Declaration->Epsilon\n");codeNode *node= new codeNode;$$=node;}
 		|Ident COLON INTEGER SEMICOLON Declaration {
 								printf("Start of Declaration->Ident\n");
 								Type t=Integer;
-								add_variable_to_symbol_table($1->name,t);
+								std::string var=$1->name;
+								add_variable_to_symbol_table(var,t);
+								//printf("%s\n",$1->name;
+								printf("After adding to symbol table\n");
 								codeNode *node = new codeNode;
 								node->code=$1->code;
 								node->code+= std::string(". ")+$1->name+std::string("\n")+$5->code;
@@ -488,6 +491,7 @@ Var:
 				
 			}
     		| Ident L_SQUARE_BRACKET Expression R_SQUARE_BRACKET {//array access statement store temp to return temp register
+				printf("Start of Var->Ident array\n");
 				std::string var_name = $1->name;
                			codeNode *node = new codeNode;
 				//if(!find(var_name)){
@@ -502,6 +506,7 @@ Var:
 
 Ident:/*We need to check this for sure*/
         IDENT{
+			printf("Start of Ident->IDENT\n");
 			codeNode *node = new codeNode;
 			//printf("start of Ident->IDENT\n");
 			node->code = "";
@@ -511,7 +516,9 @@ Ident:/*We need to check this for sure*/
 			//	yyerror(error.c_str());
 			//}
 			//printf("End of Ident->IDENT\n");
-			$$ = node;
+			//$$.code="";
+			//$$.name=$1;
+			$$=node;
 		}
 %% 
 
