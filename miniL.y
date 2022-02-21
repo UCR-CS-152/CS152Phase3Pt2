@@ -8,6 +8,7 @@
   extern int  numLines;
   extern int numColumns;
   std::string error = "There looks like there is no definition";
+  char yylex();
   void yyerror(const char *msg) {
     printf("Error at Line %d:  Row: %d. %s\n", numLines, numColumns, msg);
   }
