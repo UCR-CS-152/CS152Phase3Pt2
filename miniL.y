@@ -76,7 +76,7 @@ void print_symbol_table(void) {
   printf("--------------------\n");
 }
 
-string create_temp(){
+std::string create_temp(){
 	identCnt++;
 	return ("_tmp" + std::to_string(identCnt));
 }
@@ -228,7 +228,7 @@ Statement: 	Ident ASSIGN Expression SEMICOLON Statement1 {
 							$$=node;
 						}
                 |READ Ident L_SQUARE_BRACKET Expression R_SQUARE_BRACKET SEMICOLON Statement1 {
-													std::string var_name = $2->name
+													std::string var_name = $2->name;
 													codeNode *node = new codeNode;
 													if(!find(var_name)){
 														yyerror(error.c_str());
@@ -252,7 +252,7 @@ Statement: 	Ident ASSIGN Expression SEMICOLON Statement1 {
 																										if(!find(var_name)){
 																											yyerror(error.c_str());
 																										}
-																										node->code = $4->code
+																										node->code = $4->code;
                                                                                                         node->code+=std::string(",[]> ")+var_name+std::string(", ")+$4->name+std::string("\n")+$7->code;
                                                                                                         $$=node;
 												}
@@ -260,7 +260,7 @@ Statement: 	Ident ASSIGN Expression SEMICOLON Statement1 {
 		|BREAK SEMICOLON Statement1 {}
 		|RETURN Expression SEMICOLON Statement1 {//return src 
 			codeNode *node = new codeNode;
-			node->code = std::string("ret ")+$2->name+std::string("\n")+$4->code;;
+			node->code = std::string("ret ")+$2->name+std::string("\n")+$4->code;
 			$$ = node;
 		}
 
@@ -403,7 +403,7 @@ Term:		Var{//return temp register
 			}
 		|NUMBER{//return number;
 			codeNode *node = new codeNode;
-			node->code = $1;//using immediate value so i think i can just stop after this
+			node->name = std::to_string($1);//using immediate value so i think i can just stop after this
 			$$ = node;
 			}
 		|L_PAREN Expression R_PAREN{//return expression
@@ -455,7 +455,7 @@ Var:
 					yyerror(error.c_str());
 				}
                 node->code=std::string(",[]> ")+var_name+std::string(", ")+$3->name+std::string("\n");
-                node->name=temp;
+                node->name=var_name;//was temp but that wasn't declared so not sure what to do just changed to var_name
                 $$=node;//Just copied pasted with some slight adjustments from thomas implementation
 			}
     		;
