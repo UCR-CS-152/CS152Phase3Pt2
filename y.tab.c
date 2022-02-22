@@ -2159,9 +2159,9 @@ yyreduce:
 				node->code = "";
 				//printf("start of Var->Ident\n");
 				node->name = (yyvsp[0].node)->name;
-				if(!find(node->name)){
-					yyerror("Undefined reference to an identifier");
-				}//printf("end of Var->Ident\n");
+				//if(!find(node->name)){
+				//	yyerror("Undefined reference to an identifier");
+				//}//printf("end of Var->Ident\n");
 				(yyval.node) = node;
 				
 			}
@@ -2175,9 +2175,9 @@ yyreduce:
 				std::string var_name = create_temp();
 				
                			codeNode *node = new codeNode;
-					if(!find((yyvsp[-3].node)->name)){
-						yyerror("Undefined reference to a nonexistent identifier");
-					}
+					//if(!find($1->name)){
+					//	yyerror("Undefined reference to a nonexistent identifier");
+					//}
 		            node->code=(yyvsp[-1].node)->code+std::string(". ")+var_name+std::string("\n")+std::string("=[] ")+var_name+std::string(", ")+(yyvsp[-3].node)->name+std::string(", ")+(yyvsp[-1].node)->name+std::string("\n");
                 	node->name=var_name;//was temp but that wasn't declared so not sure what to do just changed to var_name
 					//printf("end of var->Ident square brackets\n");

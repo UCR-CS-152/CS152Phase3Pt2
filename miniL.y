@@ -161,6 +161,7 @@ Start: Program{std::cout<<$1->code;}
 
 Program:		/* empty */{
 					if(symbol_table[symbol_table.size()-1].name!="main")yyerror("No main function defined");
+					//check functions called here
 					//std::string result=strdup($1->code);
 					//printf("%s",result);
 					}
@@ -193,6 +194,7 @@ FUNCTIONS: FUNCTION Ident{add_function_to_symbol_table($2->name);} SEMICOLON BEG
 	//		assignments+=std::string("= ")+f->declarations[i].name+std::string(", $")+std::to_string(i-array_count)+std::string("\n");
 	//		else array_count++;
 	//		}
+	//checked variables and arrays used here
 	codeNode *node = new codeNode;
 	int i=0;
 	codeNode *par= new codeNode;
@@ -261,9 +263,9 @@ Statement: 	Ident ASSIGN Expression SEMICOLON Statement1 {
 			//printf("start of Statement->Ident Assign\n");
 			std::string var_name = $1->name;
 			std::string error;
-			if(!find(var_name)){
-				yyerror("Can't assign to an undefined variable");
-			}
+			//if(!find(var_name)){
+			//	yyerror("Can't assign to an undefined variable");
+			//}
 			codeNode *node = new codeNode;
 			node->code = $3->code;
 			node->code += std::string("= ") + var_name + std::string(", ") + $3->name + std::string("\n")+$5->code;
@@ -273,9 +275,9 @@ Statement: 	Ident ASSIGN Expression SEMICOLON Statement1 {
 					//printf("Start of Statement->Ident array assign\n");
 			                std::string array_name= $1->name;
                     			codeNode *node = new codeNode;
-					if(!find(array_name)){
-						yyerror("Can't access undefined reference to an array");
-					}
+					//if(!find(array_name)){
+					//	yyerror("Can't access undefined reference to an array");
+					//}
 					node->code=$3->code + $6->code;
 					node->code=std::string("[]= ")+ array_name+std::string(", ")+$3->name+std::string(", ")+$6->name+std::string("\n")+$8->code;
 					$$=node;
@@ -288,9 +290,9 @@ Statement: 	Ident ASSIGN Expression SEMICOLON Statement1 {
 							//printf("Start of Statement->Read Ident\n");
 							std::string var_name = $2->name;
 							codeNode *node = new codeNode;
-							if(!find(var_name)){
-								yyerror("Can't read from an undefined variable");
-							}
+							//if(!find(var_name)){
+							//	yyerror("Can't read from an undefined variable");
+							//}
 							node->code=std::string(".< ")+var_name+std::string("\n")+$4->code;
 							$$=node;
 						}
@@ -298,9 +300,9 @@ Statement: 	Ident ASSIGN Expression SEMICOLON Statement1 {
 													//printf("Start of Statement->Read array\n");
 													std::string var_name = $2->name;
 													codeNode *node = new codeNode;
-													if(!find(var_name)){
-														yyerror("Can't read from an undefined array");
-													}
+													//if(!find(var_name)){
+													//	yyerror("Can't read from an undefined array");
+													//}
 													node->code = $4->code;
 													node->code+=std::string(".[]< ")+var_name+std::string(", ")+$4->name+std::string("\n")+$7->code;
 													$$=node;
@@ -309,9 +311,9 @@ Statement: 	Ident ASSIGN Expression SEMICOLON Statement1 {
 							//printf("Start of Statement->Write Ident\n");
                             std::string var_name = $2->name;
                             codeNode *node = new codeNode;
-							if(!find(var_name)){
-								yyerror("Can't write to an undefined variable");
-							}
+							//if(!find(var_name)){
+							//	yyerror("Can't write to an undefined variable");
+							//}
                             node->code=std::string(".> ")+var_name+std::string("\n")+$4->code;
                             $$=node;
                             }
@@ -319,9 +321,9 @@ Statement: 	Ident ASSIGN Expression SEMICOLON Statement1 {
 						//printf("Start of Statement->Write array\n");
                                                     std::string var_name = $2->name;
                                                     codeNode *node = new codeNode;
-													if(!find(var_name)){
-														yyerror("Can't write to an undefined array");
-													}
+													//if(!find(var_name)){
+													//	yyerror("Can't write to an undefined array");
+													//}
 													node->code = $4->code;
                                                     node->code+=std::string(".[]> ")+var_name+std::string(", ")+$4->name+std::string("\n")+$7->code;
                                                     $$=node;
@@ -340,9 +342,9 @@ Statement1:	{codeNode *node= new codeNode;$$=node;}
 					//printf("Start of Statement1->Ident Assign\n");
 					std::string var_name = $1->name;
 					std::string error;
-					if(!find(var_name)){
-						yyerror("Can't assign variable to undefined reference");
-					}
+					//if(!find(var_name)){
+					//	yyerror("Can't assign variable to undefined reference");
+					//}
 					codeNode *node = new codeNode;
 					node->code = $3->code;
 					node->code += std::string("= ") + var_name + std::string(", ") + $3->name + std::string("\n")+$5->code;
@@ -352,9 +354,9 @@ Statement1:	{codeNode *node= new codeNode;$$=node;}
 														//printf("Start of Statement1->Ident array assign\n");
 														std::string array_name= $1->name;
 														codeNode *node = new codeNode;
-														if(!find(array_name)){
-															yyerror("Undefined reference to an array");
-														}
+														//if(!find(array_name)){
+														//	yyerror("Undefined reference to an array");
+														//}
 														node->code=$3->code + $6->code;
 														node->code+=std::string("[]= ")+ array_name+std::string(", ")+$3->name+std::string(", ")+$6->name+std::string("\n")+$8->code;
 														$$=node;
@@ -367,9 +369,9 @@ Statement1:	{codeNode *node= new codeNode;$$=node;}
 				//printf("Start of Statement1->Read Ident\n");
                             std::string var_name = $2->name;
                             codeNode *node = new codeNode;
-							if(!find(var_name)){
-									yyerror("Can't read from undefined reference");
-							}
+							//if(!find(var_name)){
+							//		yyerror("Can't read from undefined reference");
+							//}
                             node->code=std::string(".< ")+$2->name+std::string("\n")+$4->code;
                             $$=node;
                         }
@@ -377,9 +379,9 @@ Statement1:	{codeNode *node= new codeNode;$$=node;}
 						//printf("Start of Statement1->Read array\n");
                                                     std::string var_name = $2->name;
                                                 	codeNode *node = new codeNode;
-													if(!find(var_name)){
-														yyerror("Can't Read from undefined reference");
-													}
+													//if(!find(var_name)){
+													//	yyerror("Can't Read from undefined reference");
+													//}
                                                     node->code=$4->code+std::string(".[]< ")+$2->name+std::string(", ")+$4->name+std::string("\n")+$7->code;
                                                     $$=node;
                                                     }
@@ -387,9 +389,9 @@ Statement1:	{codeNode *node= new codeNode;$$=node;}
 			//printf("Start of Statement1->Write Ident\n");
                             std::string var_name = $2->name;
                             codeNode *node = new codeNode;
-							if(!find($2->name)){
-								yyerror("Can't write to undefined reference to an array");
-							}
+							//if(!find($2->name)){
+							//	yyerror("Can't write to undefined reference to an array");
+							//}
                             node->code=std::string(".> ")+$2->name+std::string("\n")+$4->code;
                             $$=node;
                             }
@@ -397,9 +399,9 @@ Statement1:	{codeNode *node= new codeNode;$$=node;}
 						//printf("Start of Statement1->WRITE array\n");
                                                     std::string var_name = $2->name;
                                                     codeNode *node = new codeNode;
-													if(!find(var_name)){
-														yyerror("Can't write from undefined reference to an array");
-													}
+													//if(!find(var_name)){
+													//	yyerror("Can't write from undefined reference to an array");
+													//}
                                                     node->code=$4->code+std::string(".[]> ")+$2->name+std::string(", ")+$4->name+std::string("\n")+$7->code;
                                                     $$=node;
                                                     }
@@ -482,9 +484,9 @@ Term:		Var{//return temp register
 				//printf("start of Term->Var\n");
 				//std::string temp = create_temp();
 				codeNode *node = new codeNode;
-				if(!find($1->name)){
-					yyerror("Undefined reference to a variable");
-				}
+				//if(!find($1->name)){
+				//	yyerror("Undefined reference to a variable");
+				//}
 				node->code = $1->code;
 				//node->code += std::string(". ") + $1->name + std::string("\n");
 				node->name = $1->name;
@@ -510,9 +512,9 @@ Term:		Var{//return temp register
 			std::string func_name = $1->name;
 			codeNode *node = new codeNode;
 			node->code=std::string(". ")+temp+std::string("\n");
-			if(!find(func_name)){
-				yyerror("Undefined reference to a function that doesn't exist");
-			}
+			//if(!find(func_name)){
+			//	yyerror("Undefined reference to a function that doesn't exist");
+			//}
 			node->code+=$3->code+std::string("call ") + func_name+std::string(", ")+ temp+ std::string("\n");//need to check this one
 			node->name=temp;
 			$$ = node;// I have no clue wat im doing for this one, also i think we missing a grammar rule bc table says call name, dest changed so that the dest is the temp name that it is returned to
@@ -542,9 +544,9 @@ Var:
 				node->code = "";
 				//printf("start of Var->Ident\n");
 				node->name = $1->name;
-				if(!find(node->name)){
-					yyerror("Undefined reference to an identifier");
-				}//printf("end of Var->Ident\n");
+				//if(!find(node->name)){
+				//	yyerror("Undefined reference to an identifier");
+				//}//printf("end of Var->Ident\n");
 				$$ = node;
 				
 			}
@@ -553,9 +555,9 @@ Var:
 				std::string var_name = create_temp();
 				
                			codeNode *node = new codeNode;
-					if(!find($1->name)){
-						yyerror("Undefined reference to a nonexistent identifier");
-					}
+					//if(!find($1->name)){
+					//	yyerror("Undefined reference to a nonexistent identifier");
+					//}
 		            node->code=$3->code+std::string(". ")+var_name+std::string("\n")+std::string("=[] ")+var_name+std::string(", ")+$1->name+std::string(", ")+$3->name+std::string("\n");
                 	node->name=var_name;//was temp but that wasn't declared so not sure what to do just changed to var_name
 					//printf("end of var->Ident square brackets\n");
