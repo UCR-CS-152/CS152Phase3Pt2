@@ -6,7 +6,7 @@ beginlocals
   a : array [0] of integer;
   b : integer;
   c : integer;
-
+  FUNCTION: integer;
 endlocals
 
 beginbody	## main program

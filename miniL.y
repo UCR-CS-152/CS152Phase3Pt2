@@ -279,6 +279,10 @@ Declaration: 	{codeNode *node= new codeNode;$$=node;}
                                 node->code+= std::string(".[] ")+$1->name+std::string(", ")+std::to_string($5)+std::string("\n")+$10->code;
 								$$ = node;
 								}
+		|Ident COLON ARRAY L_SQUARE_BRACKET MINUS NUMBER R_SQUARE_BRACKET OF INTEGER SEMICOLON Declaration2{
+					yyerror("Array can't be declared with size of less than 1");er=true;
+					add_variable_to_symbol_table($1->name,Array);		
+				}
 		;
 Declaration2:    {
 			codeNode *node= new codeNode;node->code="";int i=0;
@@ -303,14 +307,18 @@ Declaration2:    {
                 |Ident COLON ARRAY L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET OF INTEGER SEMICOLON Declaration2{
                                 //printf("Start of Declaration->Ident array\n");
                                 Type t=Array;
-				if(find($1->name)){yyerror("Variable already declared");er=true;}
-				if($5<=0){yyerror("Array can't be declared with size of less than 1");er=true;}
-                                add_variable_to_symbol_table($1->name,t);
-                                codeNode *node = new codeNode;
-                                node->code=$1->code;
+								if(find($1->name)){yyerror("Variable already declared");er=true;}
+								if($5<=0){yyerror("Array can't be declared with size of less than 1");er=true;}
+												add_variable_to_symbol_table($1->name,t);
+												codeNode *node = new codeNode;
+												node->code=$1->code;
                                 node->code+= std::string(".[] ")+$1->name+std::string(", ")+std::to_string($5)+std::string("\n")+$10->code;
                                                                 $$ = node;
                                                                 }
+				|Ident COLON ARRAY L_SQUARE_BRACKET MINUS NUMBER R_SQUARE_BRACKET OF INTEGER SEMICOLON Declaration2{
+					yyerror("Array can't be declared with size of less than 1");er=true;
+					add_variable_to_symbol_table($1->name,Array);	
+				}
                 ;
 
 
@@ -486,12 +494,43 @@ Bool-Exp:	NotLoop Expression Comp Expression {}
 NotLoop:	{}
 		|NOT NotLoop{}
 
-Comp:		EQ{}
-		|NEQ{}
-		|GT{}
-		|LT{}
-		|GTE{}
-		|LTE{}
+Comp:	
+		EQ{
+			condeNode *node = new codeNode;
+			node -> code = "";
+			node -> name = "==";
+			$$ = code;
+		}
+		|NEQ{
+			condeNode *node = new codeNode;
+			node -> code = "";
+			node -> name = "!=";
+			$$ = code;
+		}
+		|GT{
+			condeNode *node = new codeNode;
+			node -> code = "";
+			node -> name = ">";
+			$$ = code;
+		}
+		|LT{
+			condeNode *node = new codeNode;
+			node -> code = "";
+			node -> name = "<";
+			$$ = code;
+		}
+		|GTE{
+			condeNode *node = new codeNode;
+			node -> code = "";
+			node -> name = ">=";
+			$$ = code;
+		}
+		|LTE{
+			condeNode *node = new codeNode;
+			node -> code = "";
+			node -> name = "<=";
+			$$ = code;
+		}
 
 Expression:	Multiplicative-Expr{$$=$1;}//not sure if this is correct but I think it is needed}
 		|Multiplicative-Expr PLUS Multiplicative-Expr{
@@ -641,10 +680,10 @@ Ident:/*We need to check this for sure*/
 			//printf("start of Ident->IDENT\n");
 			node->code = "";
 			node->name = $1;
-			//for(int i = 0; i < reservedWords.size(); ++i){
-				//if(node -> name == reservedWords[i])
-				//	yyerror("Using a reserved keyword");
-			//}
+			for(int i = 0; i < reservedWords.size(); ++i){
+				if(node -> name == reservedWords[i])
+					yyerror("Using a reserved keyword");
+			}
 			//printf("after strdup\n");
 			//if(!find(node->name)){
 			//	yyerror("Undefined reference to identifier");
