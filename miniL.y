@@ -272,7 +272,7 @@ Declaration: 	{codeNode *node= new codeNode;$$=node;}
 				//printf("Start of Declaration->Ident array\n");
 				Type t=Array;
 				if(find($1->name)){yyerror("Array has already declared");er=true;}
-				if($5<0){yyerror("Array can't be declared with size of less than 1");er=true;}
+				if($5<=0){yyerror("Array can't be declared with size of less than 1");er=true;}
 				add_variable_to_symbol_table($1->name,t);				
 				codeNode *node = new codeNode;
                                 node->code=$1->code;

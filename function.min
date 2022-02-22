@@ -14,6 +14,7 @@ function mult;
 beginparams
 	a : integer;
 	b : integer;
+  a : integer;
 endparams
 beginlocals
 endlocals
