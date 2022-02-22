@@ -7,7 +7,7 @@
   extern FILE * yyin;
   extern int  numLines;
   extern int numColumns;
-  std::string error = "There looks like there is no definition";
+  std::vector<string> reservedWords = {"FUNCTION", "BEGIN_PARAMS", "END_PARAMS", "BEGIN_LOCALS", "END_LOCALS", "BEGIN_BODY", "END_BODY", "INTEGER", "ARRAY", "OF", "IF", "THEN", "ENDIF", "ELSE", "WHILE", "DO", "FOR", "BEGINLOOP", "ENDLOOP", "CONTINUE", "READ", "WRITE", "AND", "OR",  "NOT", "TRUE", "FALSE", "RETURN", "SUB", "ADD", "MULT", "DIV", "MOD", "EQ", "NEQ", "LT", "GT", "LTE", "GTE", "L_PAREN", "R_PAREN", "L_SQUARE_BRACKET", "R_SQUARE_BRACKET", "COLON", "SEMICOLON", "COMMA", "ASSIGN", "function", "ident", "beginparams", "endparams", "beginlocals", "endlocals", "integer", "beginbody", "endbody", "beginloop", "endloop", "if", "endif", "for", "continue", "while", "else", "read", "do", "write"};
   int yylex();
   void yyerror(const char *msg) {
     printf("Error at Line %d:  Column: %d. %s\n", numLines, numColumns, msg);
@@ -158,6 +158,8 @@ Program:		/* empty */{printf("start of Program->Epsilon\n");codeNode *node= new 
 		//idk bout this one
 		codeNode *node= new codeNode;
 		node->code=$1->code+$2->code;
+		if(functions.find("main") == functions.end())
+			yyerror("No main function defined");
 		//printf("Functions Program\n");
 		$$=node;
 	 };
@@ -206,9 +208,9 @@ Statement: 	Ident ASSIGN Expression SEMICOLON Statement1 {
 			printf("start of Statement->Ident Assign\n");
 			std::string var_name = $1->name;
 			std::string error;
-			//if(!find(var_name)){
-			//	yyerror(error.c_str());
-			//}
+			if(!find(var_name)){
+				yyerror("Can't assign to an undefined variable");
+			}
 			codeNode *node = new codeNode;
 			node->code = $3->code;
 			node->code += std::string("= ") + var_name + std::string(", ") + $3->name + std::string("\n")+$5->code;
@@ -218,9 +220,9 @@ Statement: 	Ident ASSIGN Expression SEMICOLON Statement1 {
 					printf("Start of Statement->Ident array assign\n");
 			                std::string array_name= $1->name;
                     			codeNode *node = new codeNode;
-					//if(!find(array_name)){
-					//	yyerror(error.c_str());
-					//}
+					if(!find(array_name)){
+						yyerror("Can't access undefined reference to an array");
+					}
 					node->code=$3->code + $6->code;
 					node->code=std::string("[]= ")+ array_name+std::string(", ")+$3->name+std::string(", ")+$6->name+std::string("\n")+$8->code;
 					$$=node;
@@ -233,9 +235,9 @@ Statement: 	Ident ASSIGN Expression SEMICOLON Statement1 {
 							printf("Start of Statement->Read Ident\n");
 							std::string var_name = $2->name;
 							codeNode *node = new codeNode;
-							//if(!find(var_name)){
-							//	yyerror(error.c_str());
-							//}
+							if(!find(var_name)){
+								yyerror("Can't read from an undefined variable");
+							}
 							node->code=std::string(".< ")+var_name+std::string("\n")+$4->code;
 							$$=node;
 						}
@@ -243,33 +245,33 @@ Statement: 	Ident ASSIGN Expression SEMICOLON Statement1 {
 													printf("Start of Statement->Read array\n");
 													std::string var_name = $2->name;
 													codeNode *node = new codeNode;
-													//if(!find(var_name)){
-													//	yyerror(error.c_str());
-													//}
+													if(!find(var_name)){
+														yyerror("Can't read from an undefined array");
+													}
 													node->code = $4->code;
 													node->code+=std::string(".[]< ")+var_name+std::string(", ")+$4->name+std::string("\n")+$7->code;
 													$$=node;
 												}
 		|WRITE Ident SEMICOLON Statement1 {
 							printf("Start of Statement->Write Ident\n");
-                                                        std::string var_name = $2->name;
-                                                        codeNode *node = new codeNode;
-							//if(!find(var_name)){
-							//yyerror(error.c_str());
-							//			}
-                                                        node->code=std::string(".> ")+var_name+std::string("\n")+$4->code;
-                                                        $$=node;
-                                                }
+                            std::string var_name = $2->name;
+                            codeNode *node = new codeNode;
+							if(!find(var_name)){
+								yyerror("Can't write to an undefined variable");
+							}
+                            node->code=std::string(".> ")+var_name+std::string("\n")+$4->code;
+                            $$=node;
+                            }
                 |WRITE Ident L_SQUARE_BRACKET Expression R_SQUARE_BRACKET SEMICOLON Statement1 {
 													printf("Start of Statement->Write array\n");
-                                                                                                        std::string var_name = $2->name;
-                                                                                                        codeNode *node = new codeNode;
-													//if(!find(var_name)){
-													//		yyerror(error.c_str());
-													//}
+                                                    std::string var_name = $2->name;
+                                                    codeNode *node = new codeNode;
+													if(!find(var_name)){
+														yyerror("Can't write to an undefined array");
+													}
 													node->code = $4->code;
-                                                                                                        node->code+=std::string(",[]> ")+var_name+std::string(", ")+$4->name+std::string("\n")+$7->code;
-                                                                                                        $$=node;
+                                                    node->code+=std::string(",[]> ")+var_name+std::string(", ")+$4->name+std::string("\n")+$7->code;
+                                                    $$=node;
 												}
 		|CONTINUE SEMICOLON Statement1 {}
 		|BREAK SEMICOLON Statement1 {}
@@ -285,9 +287,9 @@ Statement1:	{printf("Start of Statement1->Epsilon\n");codeNode *node= new codeNo
 					printf("Start of Statement1->Ident Assign\n");
 					std::string var_name = $1->name;
 					std::string error;
-					//if(!find(var_name)){
-					//	yyerror(error.c_str());
-					//}
+					if(!find(var_name)){
+						yyerror("Can't assign variable to undefined reference");
+					}
 					codeNode *node = new codeNode;
 					node->code = $3->code;
 					node->code += std::string("= ") + var_name + std::string(", ") + $3->name + std::string("\n")+$5->code;
@@ -297,9 +299,9 @@ Statement1:	{printf("Start of Statement1->Epsilon\n");codeNode *node= new codeNo
 														printf("Start of Statement1->Ident array assign\n");
 														std::string array_name= $1->name;
 														codeNode *node = new codeNode;
-														//if(!find(array_name)){
-														//	yyerror(error.c_str());
-														//}
+														if(!find(array_name)){
+															yyerror("Undefined reference to an array");
+														}
 														node->code=$3->code + $6->code;
 														node->code+=std::string("[]= ")+ array_name+std::string(", ")+$3->name+std::string(", ")+$6->name+std::string("\n")+$8->code;
 														$$=node;
@@ -308,46 +310,46 @@ Statement1:	{printf("Start of Statement1->Epsilon\n");codeNode *node= new codeNo
                 |IF Bool-Exp THEN Statement ELSE Statement ENDIF SEMICOLON Statement1 {}
                 |WHILE Bool-Exp BEGINLOOP Statement ENDLOOP SEMICOLON Statement1 {}
                 |DO BEGINLOOP Statement ENDLOOP WHILE Bool-Exp SEMICOLON Statement1 {}
-		|READ Ident SEMICOLON Statement1 {
+				|READ Ident SEMICOLON Statement1 {
 							printf("Start of Statement1->Read Ident\n");
-                                                        std::string var_name = $2->name;
-                                                        codeNode *node = new codeNode;
-							//if(!find(var_name)){
-							//		yyerror(error.c_str());
-							//			}
-                                                        node->code=std::string(".< ")+$2->name+std::string("\n")+$4->code;
-                                                        $$=node;
-                                                }
+                            std::string var_name = $2->name;
+                            codeNode *node = new codeNode;
+							if(!find(var_name)){
+									yyerror("Can't read from undefined reference");
+							}
+                            node->code=std::string(".< ")+$2->name+std::string("\n")+$4->code;
+                            $$=node;
+                        }
                 |READ Ident L_SQUARE_BRACKET Expression R_SQUARE_BRACKET SEMICOLON Statement1 {
 													printf("Start of Statement1->Read array\n");
-                                                                                                        std::string var_name = $2->name;
-                                                                                                        codeNode *node = new codeNode;
-													//if(!find(var_name)){
-													//	yyerror(error.c_str());
-													//		}
-                                                                                                        node->code=$4->code+std::string(",[]< ")+$2->name+std::string(", ")+$4->name+std::string("\n")+$7->code;
-                                                                                                        $$=node;
-                                                                                                }
+                                                    std::string var_name = $2->name;
+                                                	codeNode *node = new codeNode;
+													if(!find(var_name)){
+														yyerror("Can't Read from undefined reference");
+													}
+                                                    node->code=$4->code+std::string(",[]< ")+$2->name+std::string(", ")+$4->name+std::string("\n")+$7->code;
+                                                    $$=node;
+                                                    }
                 |WRITE Ident SEMICOLON Statement1 {
 							printf("Start of Statement1->Write Ident\n");
-                                                        std::string var_name = $2->name;
-                                                        codeNode *node = new codeNode;
-							//if(!find($2->name)){
-							//		yyerror(error.c_str());
-							//			}
-                                                        node->code=std::string(".> ")+$2->name+std::string("\n")+$4->code;
-                                                        $$=node;
-                                                }
+                            std::string var_name = $2->name;
+                            codeNode *node = new codeNode;
+							if(!find($2->name)){
+								yyerror("Can't write to undefined reference to an array");
+							}
+                            node->code=std::string(".> ")+$2->name+std::string("\n")+$4->code;
+                            $$=node;
+                            }
                 |WRITE Ident L_SQUARE_BRACKET Expression R_SQUARE_BRACKET SEMICOLON Statement1 {
 													printf("Start of Statement1->WRITE array\n");
-                                                                                                        std::string var_name = $2->name;
-                                                                                                        codeNode *node = new codeNode;
-													//if(!find(var_name)){
-													//yyerror(error.c_str());
-													//		}
-                                                                                                        node->code=$4->code+std::string(",[]> ")+$2->name+std::string(", ")+$4->name+std::string("\n")+$7->code;
-                                                                                                        $$=node;
-                                                                                                }
+                                                    std::string var_name = $2->name;
+                                                    codeNode *node = new codeNode;
+													if(!find(var_name)){
+														yyerror("Can't write from undefined reference to an array");
+													}
+                                                    node->code=$4->code+std::string(",[]> ")+$2->name+std::string(", ")+$4->name+std::string("\n")+$7->code;
+                                                    $$=node;
+                                                    }
                 |CONTINUE SEMICOLON Statement1 {}
                 |BREAK SEMICOLON Statement1 {}
                 |RETURN Expression SEMICOLON Statement1 {//return src
@@ -427,9 +429,9 @@ Term:		Var{//return temp register
 				printf("start of Term->Var\n");
 				std::string temp = create_temp();
 				codeNode *node = new codeNode;
-				//if(!find($1->name)){
-				//	yyerror(error.c_str());
-				//}
+				if(!find($1->name)){
+					yyerror("Undefined reference to a variable");
+				}
 				node->code = $1->code;
 				node->code += std::string(". ") + temp + std::string("\n");
 				node->name = temp;
@@ -453,9 +455,9 @@ Term:		Var{//return temp register
 			printf("start of Term->Ident L_Paren Expression R_paren\n");
 			std::string func_name = $1->name;
 			codeNode *node = new codeNode;
-			//if(!find(func_name)){
-			//	yyerror(error.c_str());
-			//}
+			if(!find(func_name)){
+				yyerror("Undefined reference to a function that doesn't exist");
+			}
 			node->code+=$3->code+std::string("call ") + func_name+std::string(", ")+ $3->name+ std::string("\n");//need to check this one
 			$$ = node;// I have no clue wat im doing for this one, also i think we missing a grammar rule bc table says call name, dest changed so that the dest is the temp name that it is returned to
 		}
@@ -484,9 +486,9 @@ Var:
 				node->code = "";
 				printf("start of Var->Ident\n");
 				node->name = $1->name;
-				//if(!find(node->name)){
-				//	yyerror(error.c_str());
-				//}printf("end of Var->Ident\n");
+				if(!find(node->name)){
+					yyerror("Undefined reference to an identifier");
+				}printf("end of Var->Ident\n");
 				$$ = node;
 				
 			}
@@ -494,13 +496,13 @@ Var:
 				printf("Start of Var->Ident array\n");
 				std::string var_name = $1->name;
                			codeNode *node = new codeNode;
-				//if(!find(var_name)){
-				//	yyerror(error.c_str());
-				//}
-		                node->code=std::string(",[]> ")+var_name+std::string(", ")+$3->name+std::string("\n");
-                		node->name=var_name;//was temp but that wasn't declared so not sure what to do just changed to var_name
-				printf("end of var->Ident square brackets\n");
-		                $$=node;//Just copied pasted with some slight adjustments from thomas implementation
+					if(!find(var_name)){
+						yyerror("Undefined reference to a nonexistent identifier");
+					}
+		            node->code=std::string(",[]> ")+var_name+std::string(", ")+$3->name+std::string("\n");
+                	node->name=var_name;//was temp but that wasn't declared so not sure what to do just changed to var_name
+					printf("end of var->Ident square brackets\n");
+		            $$=node;//Just copied pasted with some slight adjustments from thomas implementation
 			}
     		;
 
@@ -511,10 +513,14 @@ Ident:/*We need to check this for sure*/
 			//printf("start of Ident->IDENT\n");
 			node->code = "";
 			node->name = $1;
+			for(int i = 0; i < reservedWords.size(); ++i){
+				if(node -> name == reservedWords[i])
+					yyerror("Using a reserved keyword")
+			}
 			//printf("after strdup\n");
-			//if(!find(node->name)){
-			//	yyerror(error.c_str());
-			//}
+			if(!find(node->name)){
+				yyerror("Undefined reference to identifier");
+			}
 			//printf("End of Ident->IDENT\n");
 			//$$.code="";
 			//$$.name=$1;
