@@ -1,0 +1,40 @@
+func add
+. a
+. b
+= a, $0
+= b, $1
+. _tmp0
++ _tmp0, a, b
+ret _tmp0
+endfunc
+func mult
+. a
+. b
+= a, $0
+= b, $1
+. _tmp1
+* _tmp1, a, b
+ret _tmp1
+endfunc
+func main
+. a
+. b
+. c
+. d
+= a, 100
+= b, 50
+. _tmp2
+param a
+param b
+call add, _tmp2
+= c, _tmp2
+.> c
+. _tmp4
+param c
+. _tmp3
++ _tmp3, a, b
+param _tmp3
+call mult, _tmp4
+= d, _tmp4
+.> d
+endfunc

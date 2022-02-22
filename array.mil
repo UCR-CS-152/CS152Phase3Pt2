@@ -1,0 +1,45 @@
+Error at Line 16:  Column: 13. Undefined reference to an identifier
+Error at Line 16:  Column: 13. Undefined reference to a variable
+Error at Line 16:  Column: 16. Undefined reference to an identifier
+Error at Line 16:  Column: 16. Undefined reference to a variable
+Error at Line 25:  Column: 14. Undefined reference to a nonexistent identifier
+Error at Line 25:  Column: 14. Undefined reference to a variable
+Error at Line 25:  Column: 22. Undefined reference to a nonexistent identifier
+Error at Line 25:  Column: 22. Undefined reference to a variable
+Error at Line 25:  Column: 27. Undefined reference to an identifier
+Error at Line 25:  Column: 27. Undefined reference to a variable
+Error at Line 27:  Column: 7. Can't write from undefined reference to an array
+Error at Line 27:  Column: 7. Undefined reference to an array
+Error at Line 27:  Column: 7. Can't write from undefined reference to an array
+Error at Line 27:  Column: 7. Undefined reference to an array
+Error at Line 27:  Column: 7. Can't write from undefined reference to an array
+Error at Line 27:  Column: 7. Undefined reference to an array
+Error at Line 27:  Column: 7. Can't write from undefined reference to an array
+Error at Line 27:  Column: 7. Undefined reference to an array
+Error at Line 27:  Column: 7. Can't assign variable to undefined reference
+Error at Line 27:  Column: 7. Can't assign to an undefined variable
+func main
+.[] a, 20
+. b
+. c
+= b, 3
+= c, 5
+. _tmp0
++ _tmp0, b, c
+[]= a, 0, _tmp0
+.[]> a, 0
+[]= a, 1, 100
+.[]> a, 1
+[]= a, 2, 200
+.[]> a, 2
+. _tmp1
+=[] _tmp1, a, 0
+. _tmp2
+=[] _tmp2, a, 1
+. _tmp3
++ _tmp3, _tmp2, c
+. _tmp4
+* _tmp4, _tmp1, _tmp3
+[]= a, 3, _tmp4
+.[]> a, 3
+endfunc
