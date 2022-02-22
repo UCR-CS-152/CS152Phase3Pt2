@@ -1,20 +1,3 @@
-Error at Line 9:  Column: 18. Undefined reference to a variable
-Error at Line 9:  Column: 21. Undefined reference to a variable
-Error at Line 21:  Column: 18. Undefined reference to a variable
-Error at Line 21:  Column: 21. Undefined reference to a variable
-Error at Line 41:  Column: 13. Undefined reference to a variable
-Error at Line 41:  Column: 16. Undefined reference to a variable
-Error at Line 41:  Column: 16. Undefined reference to a function that doesn't exist
-Error at Line 45:  Column: 14. Undefined reference to a variable
-Error at Line 45:  Column: 18. Undefined reference to a variable
-Error at Line 45:  Column: 21. Undefined reference to a variable
-Error at Line 45:  Column: 21. Undefined reference to a function that doesn't exist
-Error at Line 47:  Column: 7. Can't write to undefined reference to an array
-Error at Line 47:  Column: 7. Can't assign variable to undefined reference
-Error at Line 47:  Column: 7. Can't write to undefined reference to an array
-Error at Line 47:  Column: 7. Can't assign variable to undefined reference
-Error at Line 47:  Column: 7. Can't assign variable to undefined reference
-Error at Line 47:  Column: 7. Can't assign to an undefined variable
 func add
 . a
 . b

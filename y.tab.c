@@ -69,6 +69,7 @@
   #include <string>
   #include <vector>
   #include <stack>
+  #include <utility>
   #include <string.h>
   #include <iostream>
   extern FILE * yyin;
@@ -89,6 +90,10 @@ int numberToken;
 int  count_names = 0;
 int identCnt = -1;
 std::stack<std::string> paramCount;
+std::vector<std::pair<std::string,int>>functionscalled;
+std::vector<std::pair<std::string,int>>idents_used;
+std::vector<std::pair<std::string,int>>arrays_used;
+bool er=false;
 std::string assignments;
 enum Type { Integer, Array };
 struct Symbol {
@@ -118,6 +123,28 @@ bool find(std::string value) {
   }
   return false;
 }
+bool findI(std::string value) {
+  Function *f = get_function();
+  for(int i=0; i < f->declarations.size(); i++) {
+    Symbol *s = &f->declarations[i];
+    if (s->name == value&&s->type==Integer) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool findA(std::string value) {
+  Function *f = get_function();
+  for(int i=0; i < f->declarations.size(); i++) {
+    Symbol *s = &f->declarations[i];
+    if (s->name == value&&s->type==Array) {
+      return true;
+    }
+  }
+  return false;
+}
+
 
 void add_function_to_symbol_table(std::string value) {
   Function f; 
@@ -129,8 +156,8 @@ void add_variable_to_symbol_table(std::string value, Type t) {
   Symbol s;
   s.name = value;
   s.type = t;
-  //Function *f = get_function();
-  //f->declarations.push_back(s);
+  Function *f = get_function();
+  f->declarations.push_back(s);
 }
 
 void print_symbol_table(void) {
@@ -150,7 +177,7 @@ std::string create_temp(){
 	return ("_tmp" + std::to_string(identCnt));
 }
 
-#line 154 "y.tab.c" /* yacc.c:339  */
+#line 181 "y.tab.c" /* yacc.c:339  */
 
 # ifndef YY_NULLPTR
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -240,13 +267,13 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 89 "miniL.y" /* yacc.c:355  */
+#line 116 "miniL.y" /* yacc.c:355  */
 
   int		int_val;
   char*	op_val;
   struct codeNode *node;
 
-#line 250 "y.tab.c" /* yacc.c:355  */
+#line 277 "y.tab.c" /* yacc.c:355  */
 };
 
 typedef union YYSTYPE YYSTYPE;
@@ -263,7 +290,7 @@ int yyparse (void);
 
 /* Copy the second part of user declarations.  */
 
-#line 267 "y.tab.c" /* yacc.c:358  */
+#line 294 "y.tab.c" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -565,13 +592,13 @@ static const yytype_uint8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,   160,   160,   162,   167,   177,   178,   177,   206,   207,
-     219,   229,   234,   248,   260,   272,   283,   284,   285,   286,
-     287,   297,   308,   318,   329,   330,   331,   338,   339,   351,
-     362,   363,   364,   365,   366,   376,   386,   396,   406,   407,
-     408,   415,   417,   418,   420,   421,   422,   423,   424,   425,
-     427,   428,   437,   447,   453,   462,   471,   481,   493,   499,
-     507,   522,   523,   530,   540,   551,   567
+       0,   187,   187,   189,   207,   217,   218,   217,   257,   258,
+     271,   283,   288,   303,   317,   330,   342,   343,   344,   345,
+     346,   357,   369,   380,   392,   393,   394,   401,   402,   415,
+     427,   428,   429,   430,   431,   442,   453,   464,   475,   476,
+     477,   484,   486,   487,   489,   490,   491,   492,   493,   494,
+     496,   497,   506,   516,   522,   531,   540,   550,   562,   568,
+     576,   592,   593,   600,   610,   622,   638
 };
 #endif
 
@@ -1481,23 +1508,36 @@ yyreduce:
   switch (yyn)
     {
         case 2:
-#line 160 "miniL.y" /* yacc.c:1646  */
-    {std::cout<<(yyvsp[0].node)->code;}
-#line 1487 "y.tab.c" /* yacc.c:1646  */
+#line 187 "miniL.y" /* yacc.c:1646  */
+    {if(er!=true)std::cout<<(yyvsp[0].node)->code;}
+#line 1514 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 3:
-#line 162 "miniL.y" /* yacc.c:1646  */
+#line 189 "miniL.y" /* yacc.c:1646  */
     {
 					if(symbol_table[symbol_table.size()-1].name!="main")yyerror("No main function defined");
+					//check functions called here
 					//std::string result=strdup($1->code);
 					//printf("%s",result);
+					bool f=false;
+					for(int i=0; i<functionscalled.size();i++){
+						for(int j=0;j<symbol_table.size();j++){
+							if(functionscalled[i].first==symbol_table[j].name)f=true;
+						}
+						if(f==false){
+							er=true;
+							std::cout<<"Line " <<functionscalled[i].second<<": Function called which has not been defined.\n";
+						}
+						f=true;
 					}
-#line 1497 "y.tab.c" /* yacc.c:1646  */
+					if(er==true)exit;
+					}
+#line 1537 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 4:
-#line 167 "miniL.y" /* yacc.c:1646  */
+#line 207 "miniL.y" /* yacc.c:1646  */
     { 
 		//printf("Start of Program->Functions Program\n");
 		//idk bout this one
@@ -1508,17 +1548,17 @@ yyreduce:
 		//printf("Functions Program\n");
 		(yyval.node)=node;
 	 }
-#line 1512 "y.tab.c" /* yacc.c:1646  */
+#line 1552 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 5:
-#line 177 "miniL.y" /* yacc.c:1646  */
+#line 217 "miniL.y" /* yacc.c:1646  */
     {add_function_to_symbol_table((yyvsp[0].node)->name);}
-#line 1518 "y.tab.c" /* yacc.c:1646  */
+#line 1558 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 6:
-#line 178 "miniL.y" /* yacc.c:1646  */
+#line 218 "miniL.y" /* yacc.c:1646  */
     {
 				Function *f=get_function();
 				assignments="";
@@ -1526,11 +1566,11 @@ yyreduce:
 				//		assignments+=std::string("= ")+f->declarations[i].name+std::string(", $")+std::to_string(i)+std::string("\n");
 				//	}
 				}
-#line 1530 "y.tab.c" /* yacc.c:1646  */
+#line 1570 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 7:
-#line 185 "miniL.y" /* yacc.c:1646  */
+#line 225 "miniL.y" /* yacc.c:1646  */
     {
 	//printf("Start of Functions->Function\n");
 	//add_function_to_symbol_table($2->name);
@@ -1542,6 +1582,7 @@ yyreduce:
 	//		assignments+=std::string("= ")+f->declarations[i].name+std::string(", $")+std::to_string(i-array_count)+std::string("\n");
 	//		else array_count++;
 	//		}
+	//checked variables and arrays used here
 	codeNode *node = new codeNode;
 	int i=0;
 	codeNode *par= new codeNode;
@@ -1549,23 +1590,34 @@ yyreduce:
 	while(!paramCount.empty()){par->code+=std::string("= ")+paramCount.top()+std::string(", $")+std::to_string(i)+std::string("\n");i++;paramCount.pop();}
 	node->code = (yyvsp[-12].node)->code;
 	node->code += std::string("func ") + (yyvsp[-12].node)->name + std::string("\n")+(yyvsp[-8].node)->code+par->code+(yyvsp[-4].node)->code+(yyvsp[-1].node)->code+std::string("endfunc\n");
+        for (int i=0;i<idents_used.size();i++){
+		if(!find(idents_used[i].first)){std::cout<<"Line "<<idents_used[i].second<<": Identifier "<<idents_used[i].first<<" used without having been defined\n";er=true;}
+		if(!findI(idents_used[i].first)&&find(idents_used[i].first)){std::cout<<"Line "<<idents_used[i].second<<": Array index used while using an integer variable\n"; er=true;}
+	}
+        for (int i=0;i<arrays_used.size();i++){
+                if(!find(arrays_used[i].first)){std::cout<<"Line "<<arrays_used[i].second<<": Identifier "<<arrays_used[i].first<<"  used without having been defined\n";er=true;}
+                if(!findA(arrays_used[i].first)&&find(arrays_used[i].first)){std::cout<<"Line "<<arrays_used[i].second<<": Array index used while using an integer variable\n"; er=true;}
+        }
+        idents_used.clear();
+	arrays_used.clear();
 	(yyval.node) = node;
 }
-#line 1555 "y.tab.c" /* yacc.c:1646  */
+#line 1606 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 8:
-#line 206 "miniL.y" /* yacc.c:1646  */
+#line 257 "miniL.y" /* yacc.c:1646  */
     {codeNode *node= new codeNode;(yyval.node)=node;}
-#line 1561 "y.tab.c" /* yacc.c:1646  */
+#line 1612 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 9:
-#line 207 "miniL.y" /* yacc.c:1646  */
+#line 258 "miniL.y" /* yacc.c:1646  */
     {
 								//printf("Start of Declaration->Ident\n");
 								Type t=Integer;
 								std::string var=(yyvsp[-4].node)->name;
+								if(find(var)){yyerror("Variable already declared");er=true;}
 								add_variable_to_symbol_table(var,t);
 								//printf("%s\n",$1->name;
 								//printf("After adding to symbol table\n");
@@ -1574,39 +1626,42 @@ yyreduce:
 								node->code+= std::string(". ")+(yyvsp[-4].node)->name+std::string("\n")+(yyvsp[0].node)->code;
 								(yyval.node)=node;
 								}
-#line 1578 "y.tab.c" /* yacc.c:1646  */
+#line 1630 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 10:
-#line 219 "miniL.y" /* yacc.c:1646  */
+#line 271 "miniL.y" /* yacc.c:1646  */
     {
 				//printf("Start of Declaration->Ident array\n");
 				Type t=Array;
+				if(find((yyvsp[-9].node)->name)){yyerror("Variable already declared");er=true;}
+				if((yyvsp[-5].int_val)<=0){yyerror("Array can't be declared with size of less than 1");er=true;}
 				add_variable_to_symbol_table((yyvsp[-9].node)->name,t);				
 				codeNode *node = new codeNode;
                                 node->code=(yyvsp[-9].node)->code;
                                 node->code+= std::string(".[] ")+(yyvsp[-9].node)->name+std::string(", ")+std::to_string((yyvsp[-5].int_val))+std::string("\n")+(yyvsp[0].node)->code;
 								(yyval.node) = node;
 								}
-#line 1592 "y.tab.c" /* yacc.c:1646  */
+#line 1646 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 11:
-#line 229 "miniL.y" /* yacc.c:1646  */
+#line 283 "miniL.y" /* yacc.c:1646  */
     {
 			codeNode *node= new codeNode;node->code="";int i=0;
 			//while(!paramCount.empty()){node->code+=std::string("= ")+paramCount.top()+std::string(", $")+std::to_string(i)+std::string("\n");i++;paramCount.pop();}
 			(yyval.node)=node;
 			}
-#line 1602 "y.tab.c" /* yacc.c:1646  */
+#line 1656 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 12:
-#line 234 "miniL.y" /* yacc.c:1646  */
+#line 288 "miniL.y" /* yacc.c:1646  */
     {
                                                                 //printf("Start of Declaration->Ident\n");
                                                                 Type t=Integer;
                                                                 std::string var=(yyvsp[-4].node)->name;
+								if(find(var)){yyerror("Variable already declared");er=true;}
                                                                 add_variable_to_symbol_table(var,t);
                                                                 //printf("%s\n",$1->name;
                                                                 //printf("After adding to symbol table\n");
@@ -1617,373 +1672,387 @@ yyreduce:
 								//paramCount.push($1->name);
                                                                 (yyval.node)=node;
                                                                 }
-#line 1621 "y.tab.c" /* yacc.c:1646  */
+#line 1676 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 13:
-#line 248 "miniL.y" /* yacc.c:1646  */
+#line 303 "miniL.y" /* yacc.c:1646  */
     {
                                 //printf("Start of Declaration->Ident array\n");
                                 Type t=Array;
+				if(find((yyvsp[-9].node)->name)){yyerror("Variable already declared");er=true;}
+				if((yyvsp[-5].int_val)<=0){yyerror("Array can't be declared with size of less than 1");er=true;}
                                 add_variable_to_symbol_table((yyvsp[-9].node)->name,t);
                                 codeNode *node = new codeNode;
                                 node->code=(yyvsp[-9].node)->code;
                                 node->code+= std::string(".[] ")+(yyvsp[-9].node)->name+std::string(", ")+std::to_string((yyvsp[-5].int_val))+std::string("\n")+(yyvsp[0].node)->code;
                                                                 (yyval.node) = node;
                                                                 }
-#line 1635 "y.tab.c" /* yacc.c:1646  */
+#line 1692 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 14:
-#line 260 "miniL.y" /* yacc.c:1646  */
+#line 317 "miniL.y" /* yacc.c:1646  */
     {
 			//printf("start of Statement->Ident Assign\n");
 			std::string var_name = (yyvsp[-4].node)->name;
+			idents_used.push_back(make_pair((yyvsp[-4].node)->name,numLines));
 			std::string error;
-			if(!find(var_name)){
-				yyerror("Can't assign to an undefined variable");
-			}
+			//if(!find(var_name)){
+			//	yyerror("Can't assign to an undefined variable");
+			//}
 			codeNode *node = new codeNode;
 			node->code = (yyvsp[-2].node)->code;
 			node->code += std::string("= ") + var_name + std::string(", ") + (yyvsp[-2].node)->name + std::string("\n")+(yyvsp[0].node)->code;
 			(yyval.node) = node;
 		}
-#line 1652 "y.tab.c" /* yacc.c:1646  */
+#line 1710 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 15:
-#line 272 "miniL.y" /* yacc.c:1646  */
+#line 330 "miniL.y" /* yacc.c:1646  */
     {
 					//printf("Start of Statement->Ident array assign\n");
 			                std::string array_name= (yyvsp[-7].node)->name;
+					arrays_used.push_back(make_pair((yyvsp[-7].node)->name,numLines));
                     			codeNode *node = new codeNode;
-					if(!find(array_name)){
-						yyerror("Can't access undefined reference to an array");
-					}
+					//if(!find(array_name)){
+					//	yyerror("Can't access undefined reference to an array");
+					//}
 					node->code=(yyvsp[-5].node)->code + (yyvsp[-2].node)->code;
 					node->code=std::string("[]= ")+ array_name+std::string(", ")+(yyvsp[-5].node)->name+std::string(", ")+(yyvsp[-2].node)->name+std::string("\n")+(yyvsp[0].node)->code;
 					(yyval.node)=node;
                 }
-#line 1668 "y.tab.c" /* yacc.c:1646  */
+#line 1727 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 16:
-#line 283 "miniL.y" /* yacc.c:1646  */
+#line 342 "miniL.y" /* yacc.c:1646  */
     {}
-#line 1674 "y.tab.c" /* yacc.c:1646  */
+#line 1733 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 17:
-#line 284 "miniL.y" /* yacc.c:1646  */
+#line 343 "miniL.y" /* yacc.c:1646  */
     {}
-#line 1680 "y.tab.c" /* yacc.c:1646  */
+#line 1739 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 18:
-#line 285 "miniL.y" /* yacc.c:1646  */
+#line 344 "miniL.y" /* yacc.c:1646  */
     {}
-#line 1686 "y.tab.c" /* yacc.c:1646  */
+#line 1745 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 19:
-#line 286 "miniL.y" /* yacc.c:1646  */
+#line 345 "miniL.y" /* yacc.c:1646  */
     {}
-#line 1692 "y.tab.c" /* yacc.c:1646  */
+#line 1751 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 20:
-#line 287 "miniL.y" /* yacc.c:1646  */
+#line 346 "miniL.y" /* yacc.c:1646  */
     {
 							//printf("Start of Statement->Read Ident\n");
 							std::string var_name = (yyvsp[-2].node)->name;
+					                idents_used.push_back(make_pair((yyvsp[-2].node)->name,numLines));
 							codeNode *node = new codeNode;
-							if(!find(var_name)){
-								yyerror("Can't read from an undefined variable");
-							}
+							//if(!find(var_name)){
+							//	yyerror("Can't read from an undefined variable");
+							//}
 							node->code=std::string(".< ")+var_name+std::string("\n")+(yyvsp[0].node)->code;
 							(yyval.node)=node;
 						}
-#line 1707 "y.tab.c" /* yacc.c:1646  */
+#line 1767 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 21:
-#line 297 "miniL.y" /* yacc.c:1646  */
+#line 357 "miniL.y" /* yacc.c:1646  */
     {
 													//printf("Start of Statement->Read array\n");
 													std::string var_name = (yyvsp[-5].node)->name;
+													arrays_used.push_back(make_pair((yyvsp[-5].node)->name,numLines));
 													codeNode *node = new codeNode;
-													if(!find(var_name)){
-														yyerror("Can't read from an undefined array");
-													}
+													//if(!find(var_name)){
+													//	yyerror("Can't read from an undefined array");
+													//}
 													node->code = (yyvsp[-3].node)->code;
 													node->code+=std::string(".[]< ")+var_name+std::string(", ")+(yyvsp[-3].node)->name+std::string("\n")+(yyvsp[0].node)->code;
 													(yyval.node)=node;
 												}
-#line 1723 "y.tab.c" /* yacc.c:1646  */
+#line 1784 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 22:
-#line 308 "miniL.y" /* yacc.c:1646  */
+#line 369 "miniL.y" /* yacc.c:1646  */
     {
 							//printf("Start of Statement->Write Ident\n");
                             std::string var_name = (yyvsp[-2].node)->name;
+			    idents_used.push_back(make_pair((yyvsp[-2].node)->name,numLines));
                             codeNode *node = new codeNode;
-							if(!find(var_name)){
-								yyerror("Can't write to an undefined variable");
-							}
+							//if(!find(var_name)){
+							//	yyerror("Can't write to an undefined variable");
+							//}
                             node->code=std::string(".> ")+var_name+std::string("\n")+(yyvsp[0].node)->code;
                             (yyval.node)=node;
                             }
-#line 1738 "y.tab.c" /* yacc.c:1646  */
+#line 1800 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 23:
-#line 318 "miniL.y" /* yacc.c:1646  */
+#line 380 "miniL.y" /* yacc.c:1646  */
     {
 						//printf("Start of Statement->Write array\n");
                                                     std::string var_name = (yyvsp[-5].node)->name;
+						    arrays_used.push_back(make_pair((yyvsp[-5].node)->name,numLines));
                                                     codeNode *node = new codeNode;
-													if(!find(var_name)){
-														yyerror("Can't write to an undefined array");
-													}
+													//if(!find(var_name)){
+													//	yyerror("Can't write to an undefined array");
+													//}
 													node->code = (yyvsp[-3].node)->code;
                                                     node->code+=std::string(".[]> ")+var_name+std::string(", ")+(yyvsp[-3].node)->name+std::string("\n")+(yyvsp[0].node)->code;
                                                     (yyval.node)=node;
 												}
-#line 1754 "y.tab.c" /* yacc.c:1646  */
+#line 1817 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 24:
-#line 329 "miniL.y" /* yacc.c:1646  */
+#line 392 "miniL.y" /* yacc.c:1646  */
     {}
-#line 1760 "y.tab.c" /* yacc.c:1646  */
+#line 1823 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 25:
-#line 330 "miniL.y" /* yacc.c:1646  */
+#line 393 "miniL.y" /* yacc.c:1646  */
     {}
-#line 1766 "y.tab.c" /* yacc.c:1646  */
+#line 1829 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 26:
-#line 331 "miniL.y" /* yacc.c:1646  */
+#line 394 "miniL.y" /* yacc.c:1646  */
     {//return src 
 			//printf("Start of Statement->Return\n");
 			codeNode *node = new codeNode;
 			node->code =(yyvsp[-2].node)->code+std::string("ret ")+(yyvsp[-2].node)->name+std::string("\n")+(yyvsp[0].node)->code;
 			(yyval.node) = node;
 		}
-#line 1777 "y.tab.c" /* yacc.c:1646  */
+#line 1840 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 27:
-#line 338 "miniL.y" /* yacc.c:1646  */
+#line 401 "miniL.y" /* yacc.c:1646  */
     {codeNode *node= new codeNode;(yyval.node)=node;}
-#line 1783 "y.tab.c" /* yacc.c:1646  */
+#line 1846 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 28:
-#line 339 "miniL.y" /* yacc.c:1646  */
+#line 402 "miniL.y" /* yacc.c:1646  */
     {
 					//printf("Start of Statement1->Ident Assign\n");
 					std::string var_name = (yyvsp[-4].node)->name;
+					idents_used.push_back(make_pair((yyvsp[-4].node)->name,numLines));
 					std::string error;
-					if(!find(var_name)){
-						yyerror("Can't assign variable to undefined reference");
-					}
+					//if(!find(var_name)){
+					//	yyerror("Can't assign variable to undefined reference");
+					//}
 					codeNode *node = new codeNode;
 					node->code = (yyvsp[-2].node)->code;
 					node->code += std::string("= ") + var_name + std::string(", ") + (yyvsp[-2].node)->name + std::string("\n")+(yyvsp[0].node)->code;
 					(yyval.node) = node;
 				}
-#line 1800 "y.tab.c" /* yacc.c:1646  */
+#line 1864 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 29:
-#line 351 "miniL.y" /* yacc.c:1646  */
+#line 415 "miniL.y" /* yacc.c:1646  */
     {
 														//printf("Start of Statement1->Ident array assign\n");
 														std::string array_name= (yyvsp[-7].node)->name;
+														arrays_used.push_back(make_pair((yyvsp[-7].node)->name,numLines));
 														codeNode *node = new codeNode;
-														if(!find(array_name)){
-															yyerror("Undefined reference to an array");
-														}
+														//if(!find(array_name)){
+														//	yyerror("Undefined reference to an array");
+														//}
 														node->code=(yyvsp[-5].node)->code + (yyvsp[-2].node)->code;
 														node->code+=std::string("[]= ")+ array_name+std::string(", ")+(yyvsp[-5].node)->name+std::string(", ")+(yyvsp[-2].node)->name+std::string("\n")+(yyvsp[0].node)->code;
 														(yyval.node)=node;
 														}
-#line 1816 "y.tab.c" /* yacc.c:1646  */
+#line 1881 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 30:
-#line 362 "miniL.y" /* yacc.c:1646  */
+#line 427 "miniL.y" /* yacc.c:1646  */
     {}
-#line 1822 "y.tab.c" /* yacc.c:1646  */
+#line 1887 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 31:
-#line 363 "miniL.y" /* yacc.c:1646  */
+#line 428 "miniL.y" /* yacc.c:1646  */
     {}
-#line 1828 "y.tab.c" /* yacc.c:1646  */
+#line 1893 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 32:
-#line 364 "miniL.y" /* yacc.c:1646  */
+#line 429 "miniL.y" /* yacc.c:1646  */
     {}
-#line 1834 "y.tab.c" /* yacc.c:1646  */
+#line 1899 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 33:
-#line 365 "miniL.y" /* yacc.c:1646  */
+#line 430 "miniL.y" /* yacc.c:1646  */
     {}
-#line 1840 "y.tab.c" /* yacc.c:1646  */
+#line 1905 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 34:
-#line 366 "miniL.y" /* yacc.c:1646  */
+#line 431 "miniL.y" /* yacc.c:1646  */
     {
 				//printf("Start of Statement1->Read Ident\n");
                             std::string var_name = (yyvsp[-2].node)->name;
+			    idents_used.push_back(make_pair((yyvsp[-2].node)->name, numLines));
                             codeNode *node = new codeNode;
-							if(!find(var_name)){
-									yyerror("Can't read from undefined reference");
-							}
+							//if(!find(var_name)){
+							//		yyerror("Can't read from undefined reference");
+							//}
                             node->code=std::string(".< ")+(yyvsp[-2].node)->name+std::string("\n")+(yyvsp[0].node)->code;
                             (yyval.node)=node;
                         }
-#line 1855 "y.tab.c" /* yacc.c:1646  */
+#line 1921 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 35:
-#line 376 "miniL.y" /* yacc.c:1646  */
+#line 442 "miniL.y" /* yacc.c:1646  */
     {
 						//printf("Start of Statement1->Read array\n");
                                                     std::string var_name = (yyvsp[-5].node)->name;
+							arrays_used.push_back(make_pair((yyvsp[-5].node)->name,numLines));
                                                 	codeNode *node = new codeNode;
-													if(!find(var_name)){
-														yyerror("Can't Read from undefined reference");
-													}
+													//if(!find(var_name)){
+													//	yyerror("Can't Read from undefined reference");
+													//}
                                                     node->code=(yyvsp[-3].node)->code+std::string(".[]< ")+(yyvsp[-5].node)->name+std::string(", ")+(yyvsp[-3].node)->name+std::string("\n")+(yyvsp[0].node)->code;
                                                     (yyval.node)=node;
                                                     }
-#line 1870 "y.tab.c" /* yacc.c:1646  */
+#line 1937 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 36:
-#line 386 "miniL.y" /* yacc.c:1646  */
+#line 453 "miniL.y" /* yacc.c:1646  */
     {
 			//printf("Start of Statement1->Write Ident\n");
                             std::string var_name = (yyvsp[-2].node)->name;
+			    idents_used.push_back(make_pair((yyvsp[-2].node)->name, numLines));
                             codeNode *node = new codeNode;
-							if(!find((yyvsp[-2].node)->name)){
-								yyerror("Can't write to undefined reference to an array");
-							}
+							//if(!find($2->name)){
+							//	yyerror("Can't write to undefined reference to an array");
+							//}
                             node->code=std::string(".> ")+(yyvsp[-2].node)->name+std::string("\n")+(yyvsp[0].node)->code;
                             (yyval.node)=node;
                             }
-#line 1885 "y.tab.c" /* yacc.c:1646  */
+#line 1953 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 37:
-#line 396 "miniL.y" /* yacc.c:1646  */
+#line 464 "miniL.y" /* yacc.c:1646  */
     {
 						//printf("Start of Statement1->WRITE array\n");
                                                     std::string var_name = (yyvsp[-5].node)->name;
+						    arrays_used.push_back(make_pair((yyvsp[-5].node)->name,numLines));
                                                     codeNode *node = new codeNode;
-													if(!find(var_name)){
-														yyerror("Can't write from undefined reference to an array");
-													}
+													//if(!find(var_name)){
+													//	yyerror("Can't write from undefined reference to an array");
+													//}
                                                     node->code=(yyvsp[-3].node)->code+std::string(".[]> ")+(yyvsp[-5].node)->name+std::string(", ")+(yyvsp[-3].node)->name+std::string("\n")+(yyvsp[0].node)->code;
                                                     (yyval.node)=node;
                                                     }
-#line 1900 "y.tab.c" /* yacc.c:1646  */
+#line 1969 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 38:
-#line 406 "miniL.y" /* yacc.c:1646  */
+#line 475 "miniL.y" /* yacc.c:1646  */
     {}
-#line 1906 "y.tab.c" /* yacc.c:1646  */
+#line 1975 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 39:
-#line 407 "miniL.y" /* yacc.c:1646  */
+#line 476 "miniL.y" /* yacc.c:1646  */
     {}
-#line 1912 "y.tab.c" /* yacc.c:1646  */
+#line 1981 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 40:
-#line 408 "miniL.y" /* yacc.c:1646  */
+#line 477 "miniL.y" /* yacc.c:1646  */
     {//return src
 			//printf("Start of Statment1->Return Expression Semicolon Statement1\n");
                         codeNode *node = new codeNode;
                         node->code = (yyvsp[-2].node)->code+std::string("ret ")+(yyvsp[-2].node)->name+std::string("\n")+(yyvsp[0].node)->code;;
                         (yyval.node) = node;
 			}
-#line 1923 "y.tab.c" /* yacc.c:1646  */
+#line 1992 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 41:
-#line 415 "miniL.y" /* yacc.c:1646  */
+#line 484 "miniL.y" /* yacc.c:1646  */
     {}
-#line 1929 "y.tab.c" /* yacc.c:1646  */
+#line 1998 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 42:
-#line 417 "miniL.y" /* yacc.c:1646  */
+#line 486 "miniL.y" /* yacc.c:1646  */
     {}
-#line 1935 "y.tab.c" /* yacc.c:1646  */
+#line 2004 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 43:
-#line 418 "miniL.y" /* yacc.c:1646  */
+#line 487 "miniL.y" /* yacc.c:1646  */
     {}
-#line 1941 "y.tab.c" /* yacc.c:1646  */
+#line 2010 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 44:
-#line 420 "miniL.y" /* yacc.c:1646  */
+#line 489 "miniL.y" /* yacc.c:1646  */
     {}
-#line 1947 "y.tab.c" /* yacc.c:1646  */
+#line 2016 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 45:
-#line 421 "miniL.y" /* yacc.c:1646  */
+#line 490 "miniL.y" /* yacc.c:1646  */
     {}
-#line 1953 "y.tab.c" /* yacc.c:1646  */
+#line 2022 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 46:
-#line 422 "miniL.y" /* yacc.c:1646  */
+#line 491 "miniL.y" /* yacc.c:1646  */
     {}
-#line 1959 "y.tab.c" /* yacc.c:1646  */
+#line 2028 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 47:
-#line 423 "miniL.y" /* yacc.c:1646  */
+#line 492 "miniL.y" /* yacc.c:1646  */
     {}
-#line 1965 "y.tab.c" /* yacc.c:1646  */
+#line 2034 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 48:
-#line 424 "miniL.y" /* yacc.c:1646  */
+#line 493 "miniL.y" /* yacc.c:1646  */
     {}
-#line 1971 "y.tab.c" /* yacc.c:1646  */
+#line 2040 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 49:
-#line 425 "miniL.y" /* yacc.c:1646  */
+#line 494 "miniL.y" /* yacc.c:1646  */
     {}
-#line 1977 "y.tab.c" /* yacc.c:1646  */
+#line 2046 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 50:
-#line 427 "miniL.y" /* yacc.c:1646  */
+#line 496 "miniL.y" /* yacc.c:1646  */
     {(yyval.node)=(yyvsp[0].node);}
-#line 1983 "y.tab.c" /* yacc.c:1646  */
+#line 2052 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 51:
-#line 428 "miniL.y" /* yacc.c:1646  */
+#line 497 "miniL.y" /* yacc.c:1646  */
     {
 			//printf("Start of Expression -> Multi PLUS Multi\n");
 			std::string temp = create_temp();
@@ -1993,11 +2062,11 @@ yyreduce:
 			node->name = temp;
 			(yyval.node) = node;
 		}
-#line 1997 "y.tab.c" /* yacc.c:1646  */
+#line 2066 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 52:
-#line 437 "miniL.y" /* yacc.c:1646  */
+#line 506 "miniL.y" /* yacc.c:1646  */
     {
 			//printf("Start of Expression -> Multi MINUS Multi\n");
 			std::string temp = create_temp();
@@ -2007,22 +2076,22 @@ yyreduce:
 			node->name = temp;
 			(yyval.node) = node;
 		}
-#line 2011 "y.tab.c" /* yacc.c:1646  */
+#line 2080 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 53:
-#line 447 "miniL.y" /* yacc.c:1646  */
+#line 516 "miniL.y" /* yacc.c:1646  */
     {
 				//printf("Start of Multi->Term\n");
 				codeNode *node= new codeNode;
 				node->code=(yyvsp[0].node)->code;
 				node->name=(yyvsp[0].node)->name;
 				(yyval.node)=node;}
-#line 2022 "y.tab.c" /* yacc.c:1646  */
+#line 2091 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 54:
-#line 453 "miniL.y" /* yacc.c:1646  */
+#line 522 "miniL.y" /* yacc.c:1646  */
     {
 				//printf("Start of Multi->Term MULT Term\n");
 				std::string temp = create_temp();
@@ -2032,11 +2101,11 @@ yyreduce:
 				node->name = temp;
 				(yyval.node) = node;
 			}
-#line 2036 "y.tab.c" /* yacc.c:1646  */
+#line 2105 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 55:
-#line 462 "miniL.y" /* yacc.c:1646  */
+#line 531 "miniL.y" /* yacc.c:1646  */
     {
 				//printf("Start of Multi->Term Div Term\n");
 				std::string temp = create_temp();
@@ -2046,11 +2115,11 @@ yyreduce:
 				node->name = temp;
 				(yyval.node) = node;
 			}
-#line 2050 "y.tab.c" /* yacc.c:1646  */
+#line 2119 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 56:
-#line 471 "miniL.y" /* yacc.c:1646  */
+#line 540 "miniL.y" /* yacc.c:1646  */
     {
 				//printf("Start of Multi->Term MOD Term\n");
 				std::string temp = create_temp();
@@ -2060,39 +2129,39 @@ yyreduce:
 				node->name = temp;
 				(yyval.node) = node;
 			}
-#line 2064 "y.tab.c" /* yacc.c:1646  */
+#line 2133 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 57:
-#line 481 "miniL.y" /* yacc.c:1646  */
+#line 550 "miniL.y" /* yacc.c:1646  */
     {//return temp register
 				//printf("start of Term->Var\n");
 				//std::string temp = create_temp();
 				codeNode *node = new codeNode;
-				if(!find((yyvsp[0].node)->name)){
-					yyerror("Undefined reference to a variable");
-				}
+				//if(!find($1->name)){
+				//	yyerror("Undefined reference to a variable");
+				//}
 				node->code = (yyvsp[0].node)->code;
 				//node->code += std::string(". ") + $1->name + std::string("\n");
 				node->name = (yyvsp[0].node)->name;
 				(yyval.node) = node;
 			}
-#line 2081 "y.tab.c" /* yacc.c:1646  */
+#line 2150 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 58:
-#line 493 "miniL.y" /* yacc.c:1646  */
+#line 562 "miniL.y" /* yacc.c:1646  */
     {//return number;
 			//printf("start of Term->Number\n");
 			codeNode *node = new codeNode;
 			node->name = std::to_string((yyvsp[0].int_val));//using immediate value so i think i can just stop after this
 			(yyval.node) = node;
 			}
-#line 2092 "y.tab.c" /* yacc.c:1646  */
+#line 2161 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 59:
-#line 499 "miniL.y" /* yacc.c:1646  */
+#line 568 "miniL.y" /* yacc.c:1646  */
     {//return expression
 			//printf("start of Term->L_Paren Expression R_paren\n");
 			//std::string temp = create_temp();
@@ -2101,35 +2170,36 @@ yyreduce:
 			node->name = (yyvsp[-1].node)->name;
 			(yyval.node) = node;
 						}
-#line 2105 "y.tab.c" /* yacc.c:1646  */
+#line 2174 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 60:
-#line 507 "miniL.y" /* yacc.c:1646  */
+#line 576 "miniL.y" /* yacc.c:1646  */
     {//function call
 			//printf("start of Term->Ident L_Paren Expression R_paren\n");i
 			std::string temp= create_temp();
 			std::string func_name = (yyvsp[-3].node)->name;
+			functionscalled.push_back(make_pair((yyvsp[-3].node)->name,numLines));
 			codeNode *node = new codeNode;
 			node->code=std::string(". ")+temp+std::string("\n");
-			if(!find(func_name)){
-				yyerror("Undefined reference to a function that doesn't exist");
-			}
+			//if(!find(func_name)){
+			//	yyerror("Undefined reference to a function that doesn't exist");
+			//}
 			node->code+=(yyvsp[-1].node)->code+std::string("call ") + func_name+std::string(", ")+ temp+ std::string("\n");//need to check this one
 			node->name=temp;
 			(yyval.node) = node;// I have no clue wat im doing for this one, also i think we missing a grammar rule bc table says call name, dest changed so that the dest is the temp name that it is returned to
 		}
-#line 2123 "y.tab.c" /* yacc.c:1646  */
+#line 2193 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 61:
-#line 522 "miniL.y" /* yacc.c:1646  */
+#line 592 "miniL.y" /* yacc.c:1646  */
     {codeNode *node= new codeNode;(yyval.node)=node;}
-#line 2129 "y.tab.c" /* yacc.c:1646  */
+#line 2199 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 62:
-#line 523 "miniL.y" /* yacc.c:1646  */
+#line 593 "miniL.y" /* yacc.c:1646  */
     {
 				codeNode *node=new codeNode;
 				//printf("start of expression2->expression\n");
@@ -2137,11 +2207,11 @@ yyreduce:
 				//printf("end of expression2->expression\n");
 				(yyval.node)=node;
 }
-#line 2141 "y.tab.c" /* yacc.c:1646  */
+#line 2211 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 63:
-#line 530 "miniL.y" /* yacc.c:1646  */
+#line 600 "miniL.y" /* yacc.c:1646  */
     {
 						codeNode *node = new codeNode;
 						//printf("start of expression2->expression comma expression2\n");
@@ -2149,31 +2219,32 @@ yyreduce:
 						//printf("end of expression2->expression comma expression2\n");
 						(yyval.node)=node;
 						}
-#line 2153 "y.tab.c" /* yacc.c:1646  */
+#line 2223 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 64:
-#line 540 "miniL.y" /* yacc.c:1646  */
+#line 610 "miniL.y" /* yacc.c:1646  */
     {
 				codeNode *node = new codeNode;
 				node->code = "";
 				//printf("start of Var->Ident\n");
 				node->name = (yyvsp[0].node)->name;
+				idents_used.push_back(make_pair((yyvsp[0].node)->name, numLines));
 				//if(!find(node->name)){
 				//	yyerror("Undefined reference to an identifier");
 				//}//printf("end of Var->Ident\n");
 				(yyval.node) = node;
 				
 			}
-#line 2169 "y.tab.c" /* yacc.c:1646  */
+#line 2240 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 65:
-#line 551 "miniL.y" /* yacc.c:1646  */
+#line 622 "miniL.y" /* yacc.c:1646  */
     {//array access statement store temp to return temp register
 				//printf("Start of Var->Ident array\n");
 				std::string var_name = create_temp();
-				
+				arrays_used.push_back(make_pair((yyvsp[-3].node)->name, numLines));
                			codeNode *node = new codeNode;
 					//if(!find($1->name)){
 					//	yyerror("Undefined reference to a nonexistent identifier");
@@ -2183,11 +2254,11 @@ yyreduce:
 					//printf("end of var->Ident square brackets\n");
 		            (yyval.node)=node;//Just copied pasted with some slight adjustments from thomas implementation
 			}
-#line 2187 "y.tab.c" /* yacc.c:1646  */
+#line 2258 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 66:
-#line 567 "miniL.y" /* yacc.c:1646  */
+#line 638 "miniL.y" /* yacc.c:1646  */
     {
 			//printf("Start of Ident->IDENT\n");
 			codeNode *node = new codeNode;
@@ -2207,11 +2278,11 @@ yyreduce:
 			//$$.name=$1;
 			(yyval.node)=node;
 		}
-#line 2211 "y.tab.c" /* yacc.c:1646  */
+#line 2282 "y.tab.c" /* yacc.c:1646  */
     break;
 
 
-#line 2215 "y.tab.c" /* yacc.c:1646  */
+#line 2286 "y.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -2439,7 +2510,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 586 "miniL.y" /* yacc.c:1906  */
+#line 657 "miniL.y" /* yacc.c:1906  */
  
 
 int main(int argc, char **argv) {

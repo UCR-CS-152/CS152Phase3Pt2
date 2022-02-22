@@ -4,6 +4,7 @@
   #include <string>
   #include <vector>
   #include <stack>
+  #include <utility>
   #include <string.h>
   #include <iostream>
   extern FILE * yyin;
@@ -24,6 +25,10 @@ int numberToken;
 int  count_names = 0;
 int identCnt = -1;
 std::stack<std::string> paramCount;
+std::vector<std::pair<std::string,int>>functionscalled;
+std::vector<std::pair<std::string,int>>idents_used;
+std::vector<std::pair<std::string,int>>arrays_used;
+bool er=false;
 std::string assignments;
 enum Type { Integer, Array };
 struct Symbol {
@@ -53,6 +58,28 @@ bool find(std::string value) {
   }
   return false;
 }
+bool findI(std::string value) {
+  Function *f = get_function();
+  for(int i=0; i < f->declarations.size(); i++) {
+    Symbol *s = &f->declarations[i];
+    if (s->name == value&&s->type==Integer) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool findA(std::string value) {
+  Function *f = get_function();
+  for(int i=0; i < f->declarations.size(); i++) {
+    Symbol *s = &f->declarations[i];
+    if (s->name == value&&s->type==Array) {
+      return true;
+    }
+  }
+  return false;
+}
+
 
 void add_function_to_symbol_table(std::string value) {
   Function f; 
@@ -64,8 +91,8 @@ void add_variable_to_symbol_table(std::string value, Type t) {
   Symbol s;
   s.name = value;
   s.type = t;
-  //Function *f = get_function();
-  //f->declarations.push_back(s);
+  Function *f = get_function();
+  f->declarations.push_back(s);
 }
 
 void print_symbol_table(void) {
@@ -157,13 +184,25 @@ std::string create_temp(){
 
 %%
 
-Start: Program{std::cout<<$1->code;}
+Start: Program{if(er!=true)std::cout<<$1->code;}
 
 Program:		/* empty */{
 					if(symbol_table[symbol_table.size()-1].name!="main")yyerror("No main function defined");
 					//check functions called here
 					//std::string result=strdup($1->code);
 					//printf("%s",result);
+					bool f=false;
+					for(int i=0; i<functionscalled.size();i++){
+						for(int j=0;j<symbol_table.size();j++){
+							if(functionscalled[i].first==symbol_table[j].name)f=true;
+						}
+						if(f==false){
+							er=true;
+							std::cout<<"Line " <<functionscalled[i].second<<": Function called which has not been defined.\n";
+						}
+						f=true;
+					}
+					if(er==true)exit;
 					}
     | FUNCTIONS Program	{ 
 		//printf("Start of Program->Functions Program\n");
@@ -202,6 +241,16 @@ FUNCTIONS: FUNCTION Ident{add_function_to_symbol_table($2->name);} SEMICOLON BEG
 	while(!paramCount.empty()){par->code+=std::string("= ")+paramCount.top()+std::string(", $")+std::to_string(i)+std::string("\n");i++;paramCount.pop();}
 	node->code = $2->code;
 	node->code += std::string("func ") + $2->name + std::string("\n")+$6->code+par->code+$10->code+$13->code+std::string("endfunc\n");
+        for (int i=0;i<idents_used.size();i++){
+		if(!find(idents_used[i].first)){std::cout<<"Line "<<idents_used[i].second<<": Identifier "<<idents_used[i].first<<" used without having been defined\n";er=true;}
+		if(!findI(idents_used[i].first)&&find(idents_used[i].first)){std::cout<<"Line "<<idents_used[i].second<<": Array index used while using an integer variable\n"; er=true;}
+	}
+        for (int i=0;i<arrays_used.size();i++){
+                if(!find(arrays_used[i].first)){std::cout<<"Line "<<arrays_used[i].second<<": Identifier "<<arrays_used[i].first<<"  used without having been defined\n";er=true;}
+                if(!findA(arrays_used[i].first)&&find(arrays_used[i].first)){std::cout<<"Line "<<arrays_used[i].second<<": Array index used while using an integer variable\n"; er=true;}
+        }
+        idents_used.clear();
+	arrays_used.clear();
 	$$ = node;
 };
 
@@ -210,6 +259,7 @@ Declaration: 	{codeNode *node= new codeNode;$$=node;}
 								//printf("Start of Declaration->Ident\n");
 								Type t=Integer;
 								std::string var=$1->name;
+								if(find(var)){yyerror("Variable already declared");er=true;}
 								add_variable_to_symbol_table(var,t);
 								//printf("%s\n",$1->name;
 								//printf("After adding to symbol table\n");
@@ -221,6 +271,8 @@ Declaration: 	{codeNode *node= new codeNode;$$=node;}
 		|Ident COLON ARRAY L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET OF INTEGER SEMICOLON Declaration{
 				//printf("Start of Declaration->Ident array\n");
 				Type t=Array;
+				if(find($1->name)){yyerror("Variable already declared");er=true;}
+				if($5<=0){yyerror("Array can't be declared with size of less than 1");er=true;}
 				add_variable_to_symbol_table($1->name,t);				
 				codeNode *node = new codeNode;
                                 node->code=$1->code;
@@ -237,6 +289,7 @@ Declaration2:    {
                                                                 //printf("Start of Declaration->Ident\n");
                                                                 Type t=Integer;
                                                                 std::string var=$1->name;
+								if(find(var)){yyerror("Variable already declared");er=true;}
                                                                 add_variable_to_symbol_table(var,t);
                                                                 //printf("%s\n",$1->name;
                                                                 //printf("After adding to symbol table\n");
@@ -250,6 +303,8 @@ Declaration2:    {
                 |Ident COLON ARRAY L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET OF INTEGER SEMICOLON Declaration2{
                                 //printf("Start of Declaration->Ident array\n");
                                 Type t=Array;
+				if(find($1->name)){yyerror("Variable already declared");er=true;}
+				if($5<=0){yyerror("Array can't be declared with size of less than 1");er=true;}
                                 add_variable_to_symbol_table($1->name,t);
                                 codeNode *node = new codeNode;
                                 node->code=$1->code;
@@ -262,6 +317,7 @@ Declaration2:    {
 Statement: 	Ident ASSIGN Expression SEMICOLON Statement1 {
 			//printf("start of Statement->Ident Assign\n");
 			std::string var_name = $1->name;
+			idents_used.push_back(make_pair($1->name,numLines));
 			std::string error;
 			//if(!find(var_name)){
 			//	yyerror("Can't assign to an undefined variable");
@@ -274,6 +330,7 @@ Statement: 	Ident ASSIGN Expression SEMICOLON Statement1 {
                 |Ident L_SQUARE_BRACKET Expression R_SQUARE_BRACKET ASSIGN Expression SEMICOLON Statement1{
 					//printf("Start of Statement->Ident array assign\n");
 			                std::string array_name= $1->name;
+					arrays_used.push_back(make_pair($1->name,numLines));
                     			codeNode *node = new codeNode;
 					//if(!find(array_name)){
 					//	yyerror("Can't access undefined reference to an array");
@@ -289,6 +346,7 @@ Statement: 	Ident ASSIGN Expression SEMICOLON Statement1 {
 		|READ Ident SEMICOLON Statement1 {
 							//printf("Start of Statement->Read Ident\n");
 							std::string var_name = $2->name;
+					                idents_used.push_back(make_pair($2->name,numLines));
 							codeNode *node = new codeNode;
 							//if(!find(var_name)){
 							//	yyerror("Can't read from an undefined variable");
@@ -299,6 +357,7 @@ Statement: 	Ident ASSIGN Expression SEMICOLON Statement1 {
                 |READ Ident L_SQUARE_BRACKET Expression R_SQUARE_BRACKET SEMICOLON Statement1 {
 													//printf("Start of Statement->Read array\n");
 													std::string var_name = $2->name;
+													arrays_used.push_back(make_pair($2->name,numLines));
 													codeNode *node = new codeNode;
 													//if(!find(var_name)){
 													//	yyerror("Can't read from an undefined array");
@@ -310,6 +369,7 @@ Statement: 	Ident ASSIGN Expression SEMICOLON Statement1 {
 		|WRITE Ident SEMICOLON Statement1 {
 							//printf("Start of Statement->Write Ident\n");
                             std::string var_name = $2->name;
+			    idents_used.push_back(make_pair($2->name,numLines));
                             codeNode *node = new codeNode;
 							//if(!find(var_name)){
 							//	yyerror("Can't write to an undefined variable");
@@ -320,6 +380,7 @@ Statement: 	Ident ASSIGN Expression SEMICOLON Statement1 {
                 |WRITE Ident L_SQUARE_BRACKET Expression R_SQUARE_BRACKET SEMICOLON Statement1 {
 						//printf("Start of Statement->Write array\n");
                                                     std::string var_name = $2->name;
+						    arrays_used.push_back(make_pair($2->name,numLines));
                                                     codeNode *node = new codeNode;
 													//if(!find(var_name)){
 													//	yyerror("Can't write to an undefined array");
@@ -341,6 +402,7 @@ Statement1:	{codeNode *node= new codeNode;$$=node;}
 		|Ident ASSIGN Expression SEMICOLON Statement1 {
 					//printf("Start of Statement1->Ident Assign\n");
 					std::string var_name = $1->name;
+					idents_used.push_back(make_pair($1->name,numLines));
 					std::string error;
 					//if(!find(var_name)){
 					//	yyerror("Can't assign variable to undefined reference");
@@ -353,6 +415,7 @@ Statement1:	{codeNode *node= new codeNode;$$=node;}
 		|Ident L_SQUARE_BRACKET Expression R_SQUARE_BRACKET ASSIGN Expression SEMICOLON Statement1{
 														//printf("Start of Statement1->Ident array assign\n");
 														std::string array_name= $1->name;
+														arrays_used.push_back(make_pair($1->name,numLines));
 														codeNode *node = new codeNode;
 														//if(!find(array_name)){
 														//	yyerror("Undefined reference to an array");
@@ -368,6 +431,7 @@ Statement1:	{codeNode *node= new codeNode;$$=node;}
 		|READ Ident SEMICOLON Statement1 {
 				//printf("Start of Statement1->Read Ident\n");
                             std::string var_name = $2->name;
+			    idents_used.push_back(make_pair($2->name, numLines));
                             codeNode *node = new codeNode;
 							//if(!find(var_name)){
 							//		yyerror("Can't read from undefined reference");
@@ -378,6 +442,7 @@ Statement1:	{codeNode *node= new codeNode;$$=node;}
                 |READ Ident L_SQUARE_BRACKET Expression R_SQUARE_BRACKET SEMICOLON Statement1 {
 						//printf("Start of Statement1->Read array\n");
                                                     std::string var_name = $2->name;
+							arrays_used.push_back(make_pair($2->name,numLines));
                                                 	codeNode *node = new codeNode;
 													//if(!find(var_name)){
 													//	yyerror("Can't Read from undefined reference");
@@ -388,6 +453,7 @@ Statement1:	{codeNode *node= new codeNode;$$=node;}
                 |WRITE Ident SEMICOLON Statement1 {
 			//printf("Start of Statement1->Write Ident\n");
                             std::string var_name = $2->name;
+			    idents_used.push_back(make_pair($2->name, numLines));
                             codeNode *node = new codeNode;
 							//if(!find($2->name)){
 							//	yyerror("Can't write to undefined reference to an array");
@@ -398,6 +464,7 @@ Statement1:	{codeNode *node= new codeNode;$$=node;}
                 |WRITE Ident L_SQUARE_BRACKET Expression R_SQUARE_BRACKET SEMICOLON Statement1 {
 						//printf("Start of Statement1->WRITE array\n");
                                                     std::string var_name = $2->name;
+						    arrays_used.push_back(make_pair($2->name,numLines));
                                                     codeNode *node = new codeNode;
 													//if(!find(var_name)){
 													//	yyerror("Can't write from undefined reference to an array");
@@ -510,6 +577,7 @@ Term:		Var{//return temp register
 			//printf("start of Term->Ident L_Paren Expression R_paren\n");i
 			std::string temp= create_temp();
 			std::string func_name = $1->name;
+			functionscalled.push_back(make_pair($1->name,numLines));
 			codeNode *node = new codeNode;
 			node->code=std::string(". ")+temp+std::string("\n");
 			//if(!find(func_name)){
@@ -544,6 +612,7 @@ Var:
 				node->code = "";
 				//printf("start of Var->Ident\n");
 				node->name = $1->name;
+				idents_used.push_back(make_pair($1->name, numLines));
 				//if(!find(node->name)){
 				//	yyerror("Undefined reference to an identifier");
 				//}//printf("end of Var->Ident\n");
@@ -553,7 +622,7 @@ Var:
     		| Ident L_SQUARE_BRACKET Expression R_SQUARE_BRACKET {//array access statement store temp to return temp register
 				//printf("Start of Var->Ident array\n");
 				std::string var_name = create_temp();
-				
+				arrays_used.push_back(make_pair($1->name, numLines));
                			codeNode *node = new codeNode;
 					//if(!find($1->name)){
 					//	yyerror("Undefined reference to a nonexistent identifier");
