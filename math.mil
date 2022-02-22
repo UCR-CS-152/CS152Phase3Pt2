@@ -1,0 +1,27 @@
+func main
+. a
+. b
+. c
+= a, 100
+= b, 50
+. _tmp0
++ _tmp0, a, b
+= c, _tmp0
+.> c
+. _tmp1
+- _tmp1, a, b
+= c, _tmp1
+.> c
+. _tmp2
+* _tmp2, a, b
+= c, _tmp2
+.> c
+. _tmp3
+/ _tmp3, a, b
+= c, _tmp3
+.> c
+. _tmp4
+% _tmp4, a, b
+= c, _tmp4
+.> c
+endfunc

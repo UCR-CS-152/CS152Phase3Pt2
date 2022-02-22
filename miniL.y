@@ -3,6 +3,7 @@
   #include <stdlib.h>
   #include <string>
   #include <vector>
+  #include <stack>
   #include <string.h>
   #include <iostream>
   extern FILE * yyin;
@@ -22,6 +23,7 @@ char *identToken;
 int numberToken;
 int  count_names = 0;
 int identCnt = -1;
+std::stack<std::string> paramCount;
 std::string assignments;
 enum Type { Integer, Array };
 struct Symbol {
@@ -142,7 +144,8 @@ std::string create_temp(){
 %type <node> Start
 %type <node> Program 
 %type <node> FUNCTIONS 
-%type <node> Declaration 
+%type <node> Declaration
+%type <node> Declaration2 
 %type <node> Statement 
 %type <node> Statement1 
 %type <node> Expression 
@@ -171,13 +174,13 @@ Program:		/* empty */{
 		//printf("Functions Program\n");
 		$$=node;
 	 };
-FUNCTIONS: FUNCTION Ident{add_function_to_symbol_table($2->name);} SEMICOLON BEGIN_PARAMS Declaration
+FUNCTIONS: FUNCTION Ident{add_function_to_symbol_table($2->name);} SEMICOLON BEGIN_PARAMS Declaration2
 				{
 				Function *f=get_function();
 				assignments="";
-				for(int i=0; i<f->declarations.size();i++){
-						assignments+=std::string("= ")+f->declarations[i].name+std::string(", $")+std::to_string(i)+std::string("\n");
-					}
+				//for(int i=0; i<f->declarations.size();i++){
+				//		assignments+=std::string("= ")+f->declarations[i].name+std::string(", $")+std::to_string(i)+std::string("\n");
+				//	}
 				}
 	 END_PARAMS BEGIN_LOCALS Declaration END_LOCALS BEGIN_BODY Statement END_BODY {
 	//printf("Start of Functions->Function\n");
@@ -191,8 +194,12 @@ FUNCTIONS: FUNCTION Ident{add_function_to_symbol_table($2->name);} SEMICOLON BEG
 	//		else array_count++;
 	//		}
 	codeNode *node = new codeNode;
+	int i=0;
+	codeNode *par= new codeNode;
+	par->code="";
+	while(!paramCount.empty()){par->code+=std::string("= ")+paramCount.top()+std::string(", $")+std::to_string(i)+std::string("\n");i++;paramCount.pop();}
 	node->code = $2->code;
-	node->code += std::string("func ") + $2->name + std::string("\n")+$6->code+assignments+$10->code+$13->code+std::string("endfunc\n");
+	node->code += std::string("func ") + $2->name + std::string("\n")+$6->code+par->code+$10->code+$13->code+std::string("endfunc\n");
 	$$ = node;
 };
 
@@ -219,6 +226,36 @@ Declaration: 	{codeNode *node= new codeNode;$$=node;}
 								$$ = node;
 								}
 		;
+Declaration2:    {
+			codeNode *node= new codeNode;node->code="";int i=0;
+			//while(!paramCount.empty()){node->code+=std::string("= ")+paramCount.top()+std::string(", $")+std::to_string(i)+std::string("\n");i++;paramCount.pop();}
+			$$=node;
+			}
+                |Ident COLON INTEGER SEMICOLON Declaration2 {
+                                                                //printf("Start of Declaration->Ident\n");
+                                                                Type t=Integer;
+                                                                std::string var=$1->name;
+                                                                add_variable_to_symbol_table(var,t);
+                                                                //printf("%s\n",$1->name;
+                                                                //printf("After adding to symbol table\n");
+                                                                codeNode *node = new codeNode;
+                                                                node->code=$1->code;
+								paramCount.push($1->name);
+                                                                node->code+= std::string(". ")+$1->name+std::string("\n")+$5->code;
+								//paramCount.push($1->name);
+                                                                $$=node;
+                                                                }
+                |Ident COLON ARRAY L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET OF INTEGER SEMICOLON Declaration2{
+                                //printf("Start of Declaration->Ident array\n");
+                                Type t=Array;
+                                add_variable_to_symbol_table($1->name,t);
+                                codeNode *node = new codeNode;
+                                node->code=$1->code;
+                                node->code+= std::string(".[] ")+$1->name+std::string(", ")+std::to_string($5)+std::string("\n")+$10->code;
+                                                                $$ = node;
+                                                                }
+                ;
+
 
 Statement: 	Ident ASSIGN Expression SEMICOLON Statement1 {
 			//printf("start of Statement->Ident Assign\n");
@@ -463,18 +500,21 @@ Term:		Var{//return temp register
 			//printf("start of Term->L_Paren Expression R_paren\n");
 			//std::string temp = create_temp();
 			codeNode *node = new codeNode;
-			node->code = $2 -> code+std::string("\n");// don't need to do the node->code+= stuff as substuff of expression takes care of that
+			node->code = $2 -> code;// don't need to do the node->code+= stuff as substuff of expression takes care of that
 			node->name = $2->name;
 			$$ = node;
 						}
 		|Ident L_PAREN Expression2 R_PAREN{//function call
-			//printf("start of Term->Ident L_Paren Expression R_paren\n");
+			//printf("start of Term->Ident L_Paren Expression R_paren\n");i
+			std::string temp= create_temp();
 			std::string func_name = $1->name;
 			codeNode *node = new codeNode;
+			node->code=std::string(". ")+temp+std::string("\n");
 			if(!find(func_name)){
 				yyerror("Undefined reference to a function that doesn't exist");
 			}
-			node->code+=$3->code+std::string("call ") + func_name+std::string(", ")+ $3->name+ std::string("\n");//need to check this one
+			node->code+=$3->code+std::string("call ") + func_name+std::string(", ")+ temp+ std::string("\n");//need to check this one
+			node->name=temp;
 			$$ = node;// I have no clue wat im doing for this one, also i think we missing a grammar rule bc table says call name, dest changed so that the dest is the temp name that it is returned to
 		}
 
@@ -510,12 +550,13 @@ Var:
 			}
     		| Ident L_SQUARE_BRACKET Expression R_SQUARE_BRACKET {//array access statement store temp to return temp register
 				//printf("Start of Var->Ident array\n");
-				std::string var_name = $1->name;
+				std::string var_name = create_temp();
+				
                			codeNode *node = new codeNode;
-					if(!find(var_name)){
+					if(!find($1->name)){
 						yyerror("Undefined reference to a nonexistent identifier");
 					}
-		            node->code=std::string(".[]> ")+var_name+std::string(", ")+$3->name+std::string("\n");
+		            node->code=$3->code+std::string(". ")+var_name+std::string("\n")+std::string("=[] ")+var_name+std::string(", ")+$1->name+std::string(", ")+$3->name+std::string("\n");
                 	node->name=var_name;//was temp but that wasn't declared so not sure what to do just changed to var_name
 					//printf("end of var->Ident square brackets\n");
 		            $$=node;//Just copied pasted with some slight adjustments from thomas implementation
