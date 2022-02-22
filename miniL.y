@@ -181,6 +181,7 @@ std::string create_temp(){
 %type <node> Expression2 
 %type <node> Var 
 %type <node> Ident
+%type <node> Comp
 
 %%
 
@@ -268,19 +269,17 @@ Declaration: 	{codeNode *node= new codeNode;$$=node;}
 								node->code+= std::string(". ")+$1->name+std::string("\n")+$5->code;
 								$$=node;
 								}
-		|Ident COLON ARRAY L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET OF INTEGER SEMICOLON Declaration{
+		|Ident COLON ARRAY L_SQUARE_BRACKET NUMBER{if($5<=0){yyerror("Array can't be declared with size of less than 1");er=true;}} R_SQUARE_BRACKET OF INTEGER SEMICOLON Declaration{
 				//printf("Start of Declaration->Ident array\n");
 				Type t=Array;
 				if(find($1->name)){yyerror("Array has already declared");er=true;}
-				if($5<=0){yyerror("Array can't be declared with size of less than 1");er=true;}
 				add_variable_to_symbol_table($1->name,t);				
 				codeNode *node = new codeNode;
                                 node->code=$1->code;
-                                node->code+= std::string(".[] ")+$1->name+std::string(", ")+std::to_string($5)+std::string("\n")+$10->code;
+                                node->code+= std::string(".[] ")+$1->name+std::string(", ")+std::to_string($5)+std::string("\n")+$11->code;
 								$$ = node;
 								}
-		|Ident COLON ARRAY L_SQUARE_BRACKET MINUS NUMBER R_SQUARE_BRACKET OF INTEGER SEMICOLON Declaration2{
-					yyerror("Array can't be declared with size of less than 1");er=true;
+		|Ident COLON ARRAY L_SQUARE_BRACKET MINUS{yyerror("Array can't be declared with size of less than 1");er=true;} NUMBER R_SQUARE_BRACKET OF INTEGER SEMICOLON Declaration2{
 					add_variable_to_symbol_table($1->name,Array);		
 				}
 		;
@@ -304,19 +303,17 @@ Declaration2:    {
 								//paramCount.push($1->name);
                                                                 $$=node;
                                                                 }
-                |Ident COLON ARRAY L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET OF INTEGER SEMICOLON Declaration2{
+                |Ident COLON ARRAY L_SQUARE_BRACKET NUMBER{if(find($1->name)){yyerror("Variable already declared");er=true;}} R_SQUARE_BRACKET OF INTEGER SEMICOLON Declaration2{
                                 //printf("Start of Declaration->Ident array\n");
                                 Type t=Array;
-								if(find($1->name)){yyerror("Variable already declared");er=true;}
 								if($5<=0){yyerror("Array can't be declared with size of less than 1");er=true;}
 												add_variable_to_symbol_table($1->name,t);
 												codeNode *node = new codeNode;
 												node->code=$1->code;
-                                node->code+= std::string(".[] ")+$1->name+std::string(", ")+std::to_string($5)+std::string("\n")+$10->code;
+                                node->code+= std::string(".[] ")+$1->name+std::string(", ")+std::to_string($5)+std::string("\n")+$11->code;
                                                                 $$ = node;
                                                                 }
-				|Ident COLON ARRAY L_SQUARE_BRACKET MINUS NUMBER R_SQUARE_BRACKET OF INTEGER SEMICOLON Declaration2{
-					yyerror("Array can't be declared with size of less than 1");er=true;
+				|Ident COLON ARRAY L_SQUARE_BRACKET MINUS NUMBER{yyerror("Array can't be declared with size of less than 1");er=true;} R_SQUARE_BRACKET OF INTEGER SEMICOLON Declaration2{
 					add_variable_to_symbol_table($1->name,Array);	
 				}
                 ;
@@ -496,40 +493,40 @@ NotLoop:	{}
 
 Comp:	
 		EQ{
-			condeNode *node = new codeNode;
+			codeNode *node = new codeNode;
 			node -> code = "";
 			node -> name = "==";
-			$$ = code;
+			$$ = node;
 		}
 		|NEQ{
-			condeNode *node = new codeNode;
+			codeNode *node = new codeNode;
 			node -> code = "";
 			node -> name = "!=";
-			$$ = code;
+			$$ = node;
 		}
 		|GT{
-			condeNode *node = new codeNode;
+			codeNode *node = new codeNode;
 			node -> code = "";
 			node -> name = ">";
-			$$ = code;
+			$$ = node;
 		}
 		|LT{
-			condeNode *node = new codeNode;
+			codeNode *node = new codeNode;
 			node -> code = "";
 			node -> name = "<";
-			$$ = code;
+			$$ = node;
 		}
 		|GTE{
-			condeNode *node = new codeNode;
+			codeNode *node = new codeNode;
 			node -> code = "";
 			node -> name = ">=";
-			$$ = code;
+			$$ = node;
 		}
 		|LTE{
-			condeNode *node = new codeNode;
+			codeNode *node = new codeNode;
 			node -> code = "";
 			node -> name = "<=";
-			$$ = code;
+			$$ = node;
 		}
 
 Expression:	Multiplicative-Expr{$$=$1;}//not sure if this is correct but I think it is needed}
