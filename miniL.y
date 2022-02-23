@@ -478,7 +478,8 @@ Statement1:	{codeNode *node= new codeNode;$$=node;}
                                                     $$=node;
                                                     }
                 |CONTINUE SEMICOLON Statement1 {}
-                |BREAK SEMICOLON Statement1 {}
+                |BREAK SEMICOLON Statement1 {//maybe return break as a name then do where to go in level above
+						}
                 |RETURN Expression SEMICOLON Statement1 {//return src
 			//printf("Start of Statment1->Return Expression Semicolon Statement1\n");
                         codeNode *node = new codeNode;
@@ -486,10 +487,25 @@ Statement1:	{codeNode *node= new codeNode;$$=node;}
                         $$ = node;
 			}
 
-Bool-Exp:	NotLoop Expression Comp Expression {}	
+Bool-Exp:	NotLoop Expression Comp Expression {
+							codeNode *node = new codeNode;
+							std::string temp=create_temp();
+							node->code=$2->code+$4->code;
+							node->code+=$3->name+std::string(" ")+temp+std::string(", ")+$2->name+std::string(", ")+$4->name+std::string("\n");
+							node->name=temp;
+							int not_count=std::stoi($1->name);
+							for(int i=0;i<not_count;i++){
+								node->code+=std::string("! ")+temp+std::string(", ")+temp+std::string("\n");
+								}
+							$$=node;
+							}	
 
-NotLoop:	{}
-		|NOT NotLoop{}
+NotLoop:	{codeNode *node=new codeNode;node->name="0";$$=node;}
+		|NOT NotLoop{
+				codeNode *node = new codeNode;
+				int not_count=std::stoi($2->name)+1;
+				node->name=std::to_string(not_count);
+				}
 
 Comp:	
 		EQ{
