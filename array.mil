@@ -1,25 +1,5 @@
-Error at Line 16:  Column: 13. Undefined reference to an identifier
-Error at Line 16:  Column: 13. Undefined reference to a variable
-Error at Line 16:  Column: 16. Undefined reference to an identifier
-Error at Line 16:  Column: 16. Undefined reference to a variable
-Error at Line 25:  Column: 14. Undefined reference to a nonexistent identifier
-Error at Line 25:  Column: 14. Undefined reference to a variable
-Error at Line 25:  Column: 22. Undefined reference to a nonexistent identifier
-Error at Line 25:  Column: 22. Undefined reference to a variable
-Error at Line 25:  Column: 27. Undefined reference to an identifier
-Error at Line 25:  Column: 27. Undefined reference to a variable
-Error at Line 27:  Column: 7. Can't write from undefined reference to an array
-Error at Line 27:  Column: 7. Undefined reference to an array
-Error at Line 27:  Column: 7. Can't write from undefined reference to an array
-Error at Line 27:  Column: 7. Undefined reference to an array
-Error at Line 27:  Column: 7. Can't write from undefined reference to an array
-Error at Line 27:  Column: 7. Undefined reference to an array
-Error at Line 27:  Column: 7. Can't write from undefined reference to an array
-Error at Line 27:  Column: 7. Undefined reference to an array
-Error at Line 27:  Column: 7. Can't assign variable to undefined reference
-Error at Line 27:  Column: 7. Can't assign to an undefined variable
 func main
-.[] a, 20
+.[] a, 4
 . b
 . c
 = b, 3

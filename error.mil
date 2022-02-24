@@ -1,0 +1,4 @@
+Error at Line 7:  Column: 9. Array can't be declared with size of less than 1
+Error at Line 12:  Column: 12. Continue not in loop.
+Line 13: Array index used while using an integer variable
+Error at Line 25:  Column: 14. syntax error

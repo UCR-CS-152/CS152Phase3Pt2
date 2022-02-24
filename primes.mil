@@ -1,0 +1,107 @@
+func main
+. n
+.[] a, 1000
+. i
+. j
+. x
+. sqrt_n
+.< n
+= x, n
+. _tmp0
+/ _tmp0, n, x
+. _tmp1
+> _tmp1, x, _tmp0
+! _tmp1, _tmp1
+: _label10
+?:= _label11, _tmp1
+. _tmp2
+/ _tmp2, n, x
+. _tmp3
++ _tmp3, x, _tmp2
+. _tmp4
+/ _tmp4, _tmp3, 2
+= x, _tmp4
+. _tmp0
+/ _tmp0, n, x
+. _tmp1
+> _tmp1, x, _tmp0
+! _tmp1, _tmp1
+:= _label10
+: _label11
+= sqrt_n, x
+= i, 2
+. _tmp5
+<= _tmp5, i, n
+! _tmp5, _tmp5
+: _label8
+?:= _label9, _tmp5
+[]= a, i, 0
+. _tmp6
++ _tmp6, i, 1
+= i, _tmp6
+. _tmp5
+<= _tmp5, i, n
+! _tmp5, _tmp5
+:= _label8
+: _label9
+= i, 2
+. _tmp7
+<= _tmp7, i, sqrt_n
+! _tmp7, _tmp7
+: _label6
+?:= _label7, _tmp7
+. _tmp8
+=[] _tmp8, a, i
+. _tmp9
+== _tmp9, _tmp8, 0
+! _tmp9, _tmp9
+?:= _label2, _tmp9
+. _tmp10
++ _tmp10, i, i
+= j, _tmp10
+. _tmp11
+<= _tmp11, j, n
+! _tmp11, _tmp11
+: _label0
+?:= _label1, _tmp11
+[]= a, j, 1
+. _tmp12
++ _tmp12, j, i
+= j, _tmp12
+. _tmp11
+<= _tmp11, j, n
+! _tmp11, _tmp11
+:= _label0
+: _label1
+: _label2
+. _tmp13
++ _tmp13, i, 1
+= i, _tmp13
+. _tmp7
+<= _tmp7, i, sqrt_n
+! _tmp7, _tmp7
+:= _label6
+: _label7
+= i, 2
+. _tmp14
+<= _tmp14, i, n
+! _tmp14, _tmp14
+: _label4
+?:= _label5, _tmp14
+. _tmp15
+=[] _tmp15, a, i
+. _tmp16
+== _tmp16, _tmp15, 0
+! _tmp16, _tmp16
+?:= _label3, _tmp16
+.> i
+: _label3
+. _tmp17
++ _tmp17, i, 1
+= i, _tmp17
+. _tmp14
+<= _tmp14, i, n
+! _tmp14, _tmp14
+:= _label4
+: _label5
+endfunc
