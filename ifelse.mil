@@ -1,0 +1,17 @@
+func main
+. a
+. b
+. c
+= a, 100
+= b, 50
+. _tmp0
+< _tmp0, a, b
+! _tmp0, _tmp0
+?:= _label0, _tmp0
+= c, b
+:= _label1
+: _label0
+= c, a
+: _label1
+.> c
+endfunc

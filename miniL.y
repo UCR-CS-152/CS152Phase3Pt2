@@ -24,6 +24,7 @@ char *identToken;
 int numberToken;
 int  count_names = 0;
 int identCnt = -1;
+int labelCnt=-1;
 std::stack<std::string> paramCount;
 std::vector<std::pair<std::string,int>>functionscalled;
 std::vector<std::pair<std::string,int>>idents_used;
@@ -111,6 +112,10 @@ std::string create_temp(){
 	identCnt++;
 	return ("_tmp" + std::to_string(identCnt));
 }
+std::string create_label(){
+	labelCnt++;
+	return ("_label"+std::to_string(labelCnt));
+	}
 %}
 
 %union{
@@ -182,6 +187,8 @@ std::string create_temp(){
 %type <node> Var 
 %type <node> Ident
 %type <node> Comp
+%type <node> Bool-Exp
+%type <node> NotLoop
 
 %%
 
@@ -344,10 +351,41 @@ Statement: 	Ident ASSIGN Expression SEMICOLON Statement1 {
 					node->code=std::string("[]= ")+ array_name+std::string(", ")+$3->name+std::string(", ")+$6->name+std::string("\n")+$8->code;
 					$$=node;
                 }
-		|IF Bool-Exp THEN Statement ENDIF SEMICOLON Statement1 {}
-		|IF Bool-Exp THEN Statement ELSE Statement ENDIF SEMICOLON Statement1 {}
-		|WHILE Bool-Exp BEGINLOOP Statement ENDLOOP SEMICOLON Statement1 {}
-		|DO BEGINLOOP Statement ENDLOOP WHILE Bool-Exp SEMICOLON Statement1 {}
+		|IF Bool-Exp THEN Statement ENDIF SEMICOLON Statement1 {
+									codeNode *node = new codeNode;
+									node->code=$2->code;
+									std::string label1=create_label();
+									node->code+=std::string("! ")+$2->name+std::string(", ")+$2->name+std::string("\n");
+									node->code+=std::string("?:= ")+label1+std::string(", ")+$2->name+std::string("\n")+$4->code+std::string(": ")+label1+std::string("\n")+$7->code;
+									$$=node;
+									}
+		|IF Bool-Exp THEN Statement ELSE Statement ENDIF SEMICOLON Statement1 {
+                                                                        codeNode *node = new codeNode;
+                                                                        node->code=$2->code;
+                                                                        std::string label1=create_label();
+									std::string label2=create_label();
+                                                                        node->code+=std::string("! ")+$2->name+std::string(", ")+$2->name+std::string("\n");
+                                                                        node->code+=std::string("?:= ")+label1+std::string(", ")+$2->name+std::string("\n")+$4->code+std::string(":= ")+label2+std::string("\n")+std::string(": ")+label1+std::string("\n")+$6->code;
+									node->code+=std::string(": ")+label2+std::string("\n")+$9->code;
+                                                                        $$=node;
+									}
+		|WHILE Bool-Exp BEGINLOOP Statement ENDLOOP SEMICOLON Statement1 {
+											codeNode *node = new codeNode;
+											std::string label1=create_label();
+											std::string label2=create_label();
+											node->code=$2->code;
+											node->code+=std::string("! ")+$2->name+std::string(", ")+$2->name+std::string("\n");
+											node->code+=std::string(": ")+label1+std::string("\n")+std::string("?:= ")+label2+std::string(", ")+$2->name+std::string("\n")+$4->code+$2->code;
+											node->code+=std::string(":= ")+label1+std::string("\n")+std::string(": ")+label2+std::string("\n")+$7->code;
+											$$=node;
+											}
+		|DO BEGINLOOP Statement ENDLOOP WHILE Bool-Exp SEMICOLON Statement1 {
+											codeNode *node = new codeNode;
+											std::string label1=create_label();
+											//node->code=$6->code;
+											node->code=std::string(": ")+label1+std::string("\n")+$3->code+$6->code+std::string("?:= ")+label1+std::string(", ")+$6->name+std::string("\n")+$8->code;
+											$$=node;
+											}
 		|READ Ident SEMICOLON Statement1 {
 							//printf("Start of Statement->Read Ident\n");
 							std::string var_name = $2->name;
@@ -429,10 +467,42 @@ Statement1:	{codeNode *node= new codeNode;$$=node;}
 														node->code+=std::string("[]= ")+ array_name+std::string(", ")+$3->name+std::string(", ")+$6->name+std::string("\n")+$8->code;
 														$$=node;
 														}
-                |IF Bool-Exp THEN Statement ENDIF SEMICOLON Statement1 {}
-                |IF Bool-Exp THEN Statement ELSE Statement ENDIF SEMICOLON Statement1 {}
-                |WHILE Bool-Exp BEGINLOOP Statement ENDLOOP SEMICOLON Statement1 {}
-                |DO BEGINLOOP Statement ENDLOOP WHILE Bool-Exp SEMICOLON Statement1 {}
+                |IF Bool-Exp THEN Statement ENDIF SEMICOLON Statement1 {
+                                                                        codeNode *node = new codeNode;
+                                                                        node->code=$2->code;
+                                                                        std::string label1=create_label();
+                                                                        node->code+=std::string("! ")+$2->name+std::string(", ")+$2->name+std::string("\n");
+                                                                        node->code+=std::string("?:= ")+label1+std::string(", ")+$2->name+std::string("\n")+$4->code+std::string(": ")+label1+std::string("\n")+$7->code;
+                                                                        $$=node;
+                                                                        }
+                |IF Bool-Exp THEN Statement ELSE Statement ENDIF SEMICOLON Statement1 {
+                                                                        codeNode *node = new codeNode;
+                                                                        node->code=$2->code;
+                                                                        std::string label1=create_label();
+                                                                        std::string label2=create_label();
+                                                                        node->code+=std::string("! ")+$2->name+std::string(", ")+$2->name+std::string("\n");
+                                                                        node->code+=std::string("?:= ")+label1+std::string(", ")+$2->name+std::string("\n")+$4->code+std::string(":= ")+label2+std::string("\n")+std::string(": ")+label1+std::string("\n")+$6->code;
+                                                                        node->code+=std::string(": ")+label2+std::string("\n")+$9->code;
+                                                                        $$=node;
+                                                                        }
+                |WHILE Bool-Exp BEGINLOOP Statement ENDLOOP SEMICOLON Statement1 {
+                                                                                        codeNode *node = new codeNode;
+                                                                                        std::string label1=create_label();
+                                                                                        std::string label2=create_label();
+                                                                                        node->code=$2->code;
+                                                                                        node->code+=std::string("! ")+$2->name+std::string(", ")+$2->name+std::string("\n");
+                                                                                        node->code+=std::string(": ")+label1+std::string("\n")+std::string("?:= ")+label2+std::string(", ")+$2->name+std::string("\n")+$4->code+$2->code;
+											node->code+=std::string("! ")+$2->name+std::string(", ")+$2->name+std::string("\n");
+                                                                                        node->code+=std::string(":= ")+label1+std::string("\n")+std::string(": ")+label2+std::string("\n")+$7->code;
+											$$=node;
+                                                                                        }
+                |DO BEGINLOOP Statement ENDLOOP WHILE Bool-Exp SEMICOLON Statement1 {
+                                                                                        codeNode *node = new codeNode;
+                                                                                        std::string label1=create_label();
+                                                                                        //node->code=$6->code;
+                                                                                        node->code=std::string(": ")+label1+std::string("\n")+$3->code+$6->code+std::string("?:= ")+label1+std::string(", ")+$6->name+std::string("\n")+$8->code;
+                                                                                        $$=node;
+                                                                                        }
 		|READ Ident SEMICOLON Statement1 {
 				//printf("Start of Statement1->Read Ident\n");
                             std::string var_name = $2->name;
@@ -491,6 +561,7 @@ Bool-Exp:	NotLoop Expression Comp Expression {
 							codeNode *node = new codeNode;
 							std::string temp=create_temp();
 							node->code=$2->code+$4->code;
+							node->code=std::string(". ")+temp+std::string("\n");
 							node->code+=$3->name+std::string(" ")+temp+std::string(", ")+$2->name+std::string(", ")+$4->name+std::string("\n");
 							node->name=temp;
 							int not_count=std::stoi($1->name);
