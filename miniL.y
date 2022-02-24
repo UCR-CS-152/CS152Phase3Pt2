@@ -30,6 +30,7 @@ std::vector<std::pair<std::string,int>>functionscalled;
 std::vector<std::pair<std::string,int>>idents_used;
 std::vector<std::pair<std::string,int>>arrays_used;
 bool er=false;
+bool inLoop=false;
 std::string assignments;
 enum Type { Integer, Array };
 struct Symbol {
@@ -195,7 +196,7 @@ std::string create_label(){
 Start: Program{if(er!=true)std::cout<<$1->code;}
 
 Program:		/* empty */{
-					if(symbol_table[symbol_table.size()-1].name!="main")yyerror("No main function defined");
+					if(symbol_table[symbol_table.size()-1].name!="main"){std::cout<<"No main function defined\n";er=true;}
 					//check functions called here
 					//std::string result=strdup($1->code);
 					//printf("%s",result);
@@ -217,8 +218,6 @@ Program:		/* empty */{
 		//idk bout this one
 		codeNode *node= new codeNode;
 		node->code=$1->code+$2->code;
-		//if(functions.find("main") == functions.end())
-		//	yyerror("No main function defined");
 		//printf("Functions Program\n");
 		$$=node;
 	 };
@@ -369,54 +368,54 @@ Statement: 	Ident ASSIGN Expression SEMICOLON Statement1 {
 									node->code+=std::string(": ")+label2+std::string("\n")+$9->code;
                                                                         $$=node;
 									}
-		|WHILE Bool-Exp BEGINLOOP Statement ENDLOOP SEMICOLON Statement1 {
+		|WHILE{inLoop=true;} Bool-Exp BEGINLOOP Statement ENDLOOP{inLoop=false;} SEMICOLON Statement1 {
 											codeNode *node = new codeNode;
 											std::string label1=create_label();
 											std::string label2=create_label();
-											node->code=$2->code;
+											node->code=$3->code;
 											std::string br=std::string("Break");
 											std::string con=std::string("Continue");
-											std::size_t found = $4->code.find(br);
+											std::size_t found = $5->code.find(br);
 											while(found!=std::string::npos){
 													std::string replace=std::string(":= ")+label2;
-													$4->code.replace(found,br.length(),replace);
-													found = $4->code.find(br);
+													$5->code.replace(found,br.length(),replace);
+													found = $5->code.find(br);
 												}
-											found = $4->code.find(con);
+											found = $5->code.find(con);
                                                                                         while(found!=std::string::npos){
                                                                                                         std::string replace=std::string(":= ")+label1;
-                                                                                                        $4->code.replace(found,con.length(),replace);
-                                                                                                        found = $4->code.find(con);
+                                                                                                        $5->code.replace(found,con.length(),replace);
+                                                                                                        found = $5->code.find(con);
                                                                                                 }
-											node->code+=std::string("! ")+$2->name+std::string(", ")+$2->name+std::string("\n");
-											node->code+=std::string(": ")+label1+std::string("\n")+std::string("?:= ")+label2+std::string(", ")+$2->name+std::string("\n")+$4->code+$2->code;
-											node->code+=std::string("! ")+$2->name+std::string(", ")+$2->name+std::string("\n");
-											node->code+=std::string(":= ")+label1+std::string("\n")+std::string(": ")+label2+std::string("\n")+$7->code;
+											node->code+=std::string("! ")+$3->name+std::string(", ")+$3->name+std::string("\n");
+											node->code+=std::string(": ")+label1+std::string("\n")+std::string("?:= ")+label2+std::string(", ")+$3->name+std::string("\n")+$5->code+$3->code;
+											node->code+=std::string("! ")+$3->name+std::string(", ")+$3->name+std::string("\n");
+											node->code+=std::string(":= ")+label1+std::string("\n")+std::string(": ")+label2+std::string("\n")+$9->code;
 											$$=node;
 											}
-		|DO BEGINLOOP Statement ENDLOOP WHILE Bool-Exp SEMICOLON Statement1 {
+		|DO{inLoop=true;} BEGINLOOP Statement ENDLOOP WHILE Bool-Exp SEMICOLON{inLoop=false;} Statement1 {
 											codeNode *node = new codeNode;
 											std::string label1=create_label();
 											std::string label2=create_label();
 											std::string label3=create_label();
 											std::string br=std::string("Break");
 											std::string con=std::string("Continue");
-											std::size_t found = $3->code.find(br);
+											std::size_t found = $4->code.find(br);
 											//node->code=$6->code;
 											while(found!=std::string::npos){
                                                                                                         std::string replace=std::string(":= ")+label3;
-                                                                                                        $3->code.replace(found,br.length(),replace);
-                                                                                                        found = $3->code.find(br);
+                                                                                                        $4->code.replace(found,br.length(),replace);
+                                                                                                        found = $4->code.find(br);
                                                                                                 }
-                                                                                        found = $3->code.find(con);
+                                                                                        found = $4->code.find(con);
                                                                                         while(found!=std::string::npos){
                                                                                                         std::string replace=std::string(":= ")+label2;
-                                                                                                        $3->code.replace(found,con.length(),replace);
-                                                                                                        found = $3->code.find(con);
+                                                                                                        $4->code.replace(found,con.length(),replace);
+                                                                                                        found = $4->code.find(con);
                                                                                                 }
-											node->code=std::string(": ")+label1+std::string("\n")+$3->code+$6->code;
-											node->code+=std::string(": ")+label2+std::string("\n")+std::string("?:= ")+label1+std::string(", ")+$6->name+std::string("\n");
-											node->code+=std::string(": ")+label3+std::string("\n")+$8->code;
+											node->code=std::string(": ")+label1+std::string("\n")+$4->code+$7->code;
+											node->code+=std::string(": ")+label2+std::string("\n")+std::string("?:= ")+label1+std::string(", ")+$7->name+std::string("\n");
+											node->code+=std::string(": ")+label3+std::string("\n")+$10->code;
 											$$=node;
 											}
 		|READ Ident SEMICOLON Statement1 {
@@ -465,13 +464,13 @@ Statement: 	Ident ASSIGN Expression SEMICOLON Statement1 {
                                                     node->code+=std::string(".[]> ")+var_name+std::string(", ")+$4->name+std::string("\n")+$7->code;
                                                     $$=node;
 												}
-                |CONTINUE SEMICOLON Statement1 {
+                |CONTINUE{if(inLoop==false)er=true;yyerror("Continue is not in loop");} SEMICOLON Statement1 {
                                                 codeNode *node = new codeNode;
                                                 node->code = std::string("Continue \n");
                                                 node->name = std::string ("Continue");
                                                 $$=node;
                                                 }
-                |BREAK SEMICOLON Statement1 {//maybe return break as a name then do where to go in level above
+                |BREAK{if(inLoop==false)er=true;yyerror("Break is not in loop");} SEMICOLON Statement1 {//maybe return break as a name then do where to go in level above
                                                 codeNode *node = new codeNode;
                                                 node->code = std::string("Break \n");
                                                 node->name = std::string ("Break");
@@ -529,54 +528,54 @@ Statement1:	{codeNode *node= new codeNode;$$=node;}
                                                                         node->code+=std::string(": ")+label2+std::string("\n")+$9->code;
                                                                         $$=node;
                                                                         }
-                |WHILE Bool-Exp BEGINLOOP Statement ENDLOOP SEMICOLON Statement1 {
+                |WHILE{inLoop=true;} Bool-Exp BEGINLOOP Statement ENDLOOP{inLoop=false;} SEMICOLON Statement1 {
 											codeNode *node = new codeNode;
 											std::string label1=create_label();
 											std::string label2=create_label();
-											node->code=$2->code;
+											node->code=$3->code;
 											std::string br=std::string("Break");
 											std::string con=std::string("Continue");
-											std::size_t found = $4->code.find(br);
+											std::size_t found = $5->code.find(br);
 											while(found!=std::string::npos){
 													std::string replace=std::string(":= ")+label2;
-													$4->code.replace(found,br.length(),replace);
-													found = $4->code.find(br);
+													$5->code.replace(found,br.length(),replace);
+													found = $5->code.find(br);
 												}
-											found = $4->code.find(con);
+											found = $5->code.find(con);
                                                                                         while(found!=std::string::npos){
                                                                                                         std::string replace=std::string(":= ")+label1;
-                                                                                                        $4->code.replace(found,con.length(),replace);
-                                                                                                        found = $4->code.find(con);
+                                                                                                        $5->code.replace(found,con.length(),replace);
+                                                                                                        found = $5->code.find(con);
                                                                                                 }
-											node->code+=std::string("! ")+$2->name+std::string(", ")+$2->name+std::string("\n");
-											node->code+=std::string(": ")+label1+std::string("\n")+std::string("?:= ")+label2+std::string(", ")+$2->name+std::string("\n")+$4->code+$2->code;
-											node->code+=std::string("! ")+$2->name+std::string(", ")+$2->name+std::string("\n");
-											node->code+=std::string(":= ")+label1+std::string("\n")+std::string(": ")+label2+std::string("\n")+$7->code;
+											node->code+=std::string("! ")+$3->name+std::string(", ")+$3->name+std::string("\n");
+											node->code+=std::string(": ")+label1+std::string("\n")+std::string("?:= ")+label2+std::string(", ")+$3->name+std::string("\n")+$5->code+$3->code;
+											node->code+=std::string("! ")+$3->name+std::string(", ")+$3->name+std::string("\n");
+											node->code+=std::string(":= ")+label1+std::string("\n")+std::string(": ")+label2+std::string("\n")+$9->code;
 											$$=node;
                                                                                         }
-                |DO BEGINLOOP Statement ENDLOOP WHILE Bool-Exp SEMICOLON Statement1 {
+                |DO BEGINLOOP{inLoop=true;} Statement ENDLOOP WHILE Bool-Exp SEMICOLON{inLoop=false;} Statement1 {
 											codeNode *node = new codeNode;
 											std::string label1=create_label();
 											std::string label2=create_label();
 											std::string label3=create_label();
 											std::string br=std::string("Break");
 											std::string con=std::string("Continue");
-											std::size_t found = $3->code.find(br);
+											std::size_t found = $4->code.find(br);
 											//node->code=$6->code;
 											while(found!=std::string::npos){
                                                                                                         std::string replace=std::string(":= ")+label3;
-                                                                                                        $3->code.replace(found,br.length(),replace);
-                                                                                                        found = $3->code.find(br);
+                                                                                                        $4->code.replace(found,br.length(),replace);
+                                                                                                        found = $4->code.find(br);
                                                                                                 }
-                                                                                        found = $3->code.find(con);
+                                                                                        found = $4->code.find(con);
                                                                                         while(found!=std::string::npos){
                                                                                                         std::string replace=std::string(":= ")+label2;
-                                                                                                        $3->code.replace(found,con.length(),replace);
-                                                                                                        found = $3->code.find(con);
+                                                                                                        $4->code.replace(found,con.length(),replace);
+                                                                                                        found = $4->code.find(con);
                                                                                                 }
-											node->code=std::string(": ")+label1+std::string("\n")+$3->code+$6->code;
-											node->code+=std::string(": ")+label2+std::string("\n")+std::string("?:= ")+label1+std::string(", ")+$6->name+std::string("\n");
-											node->code+=std::string(": ")+label3+std::string("\n")+$8->code;
+											node->code=std::string(": ")+label1+std::string("\n")+$4->code+$7->code;
+											node->code+=std::string(": ")+label2+std::string("\n")+std::string("?:= ")+label1+std::string(", ")+$7->name+std::string("\n");
+											node->code+=std::string(": ")+label3+std::string("\n")+$10->code;
 											$$=node;
                                                                                         }
 		|READ Ident SEMICOLON Statement1 {
@@ -623,13 +622,13 @@ Statement1:	{codeNode *node= new codeNode;$$=node;}
                                                     node->code=$4->code+std::string(".[]> ")+$2->name+std::string(", ")+$4->name+std::string("\n")+$7->code;
                                                     $$=node;
                                                     }
-                |CONTINUE SEMICOLON Statement1 {
+                |CONTINUE{if(inLoop==false)er=true;yyerror("Continue not in loop.");} SEMICOLON Statement1 {
 						codeNode *node = new codeNode;
 						node->code = std::string("Continue \n");
 						node->name = std::string ("Continue");
 						$$=node;
 						}
-                |BREAK SEMICOLON Statement1 {//maybe return break as a name then do where to go in level above
+                |BREAK{if(inLoop==false)er=true;yyerror("Break not in loop.");} SEMICOLON Statement1 {//maybe return break as a name then do where to go in level above
 						codeNode *node = new codeNode;
                                                 node->code = std::string("Break \n");
                                                 node->name = std::string ("Break");
@@ -702,24 +701,24 @@ Comp:
 		}
 
 Expression:	Multiplicative-Expr{codeNode *node = new codeNode; node->code=$1->code;node->name=$1->name;$$=node;}//not sure if this is correct but I think it is needed}
-		|Multiplicative-Expr PLUS Multiplicative-Expr{
-			//printf("Start of Expression -> Multi PLUS Multi\n");
-			std::string temp = create_temp();
-			codeNode *node = new codeNode;
-			node->code = $1->code + $3->code+std::string(". ")+temp+std::string("\n");
-			node->code += std::string("+ ") + temp + std::string(", ") + $1->name + std::string(", ") + $3->name + std::string("\n");
-			node->name = temp;
-			$$ = node;
-		}
-		|Multiplicative-Expr MINUS Multiplicative-Expr{
-			//printf("Start of Expression -> Multi MINUS Multi\n");
-			std::string temp = create_temp();
-			codeNode *node = new codeNode;
-			node->code = $1->code + $3->code+std::string(". ")+temp+std::string("\n");
-			node->code += std::string("- ") + temp + std::string(", ") + $1->name + std::string(", ") + $3->name + std::string("\n");
-			node->name = temp;
-			$$ = node;
-		}
+		|Multiplicative-Expr PLUS Expression{
+                        //printf("Start of Expression -> Multi PLUS Multi\n");
+                        std::string temp = create_temp();
+                        codeNode *node = new codeNode;
+                        node->code = $1->code + $3->code+std::string(". ")+temp+std::string("\n");
+                        node->code += std::string("+ ") + temp + std::string(", ") + $1->name + std::string(", ") + $3->name + std::string("\n");
+                        node->name = temp;
+                        $$ = node;
+                }
+                |Multiplicative-Expr MINUS Expression{
+                        //printf("Start of Expression -> Multi MINUS Multi\n");
+                        std::string temp = create_temp();
+                        codeNode *node = new codeNode;
+                        node->code = $1->code + $3->code+std::string(". ")+temp+std::string("\n");
+                        node->code += std::string("- ") + temp + std::string(", ") + $1->name + std::string(", ") + $3->name + std::string("\n");
+                        node->name = temp;
+                        $$ = node;
+                }
 
 Multiplicative-Expr: 	Term {
 				//printf("Start of Multi->Term\n");
@@ -727,7 +726,7 @@ Multiplicative-Expr: 	Term {
 				node->code=$1->code;
 				node->name=$1->name;
 				$$=node;}
-			|Term MULT Term {
+			|Term MULT Multiplicative-Expr {
 				//printf("Start of Multi->Term MULT Term\n");
 				std::string temp = create_temp();
 				codeNode *node = new codeNode;
@@ -736,7 +735,7 @@ Multiplicative-Expr: 	Term {
 				node->name = temp;
 				$$ = node;
 			}
-			|Term DIV Term {
+			|Term DIV Multiplicative-Expr {
 				//printf("Start of Multi->Term Div Term\n");
 				std::string temp = create_temp();
 				codeNode *node = new codeNode;
@@ -745,7 +744,7 @@ Multiplicative-Expr: 	Term {
 				node->name = temp;
 				$$ = node;
 			}
-			|Term MOD Term {
+			|Term MOD Multiplicative-Expr {
 				//printf("Start of Multi->Term MOD Term\n");
 				std::string temp = create_temp();
 				codeNode *node = new codeNode;
@@ -773,6 +772,12 @@ Term:		Var{//return temp register
 			node->name = std::to_string($1);//using immediate value so i think i can just stop after this
 			$$ = node;
 			}
+		|MINUS NUMBER{//return number;
+                        //printf("start of Term->Number\n");
+                        codeNode *node = new codeNode;
+                        node->name = std::string("-")+std::to_string($2);//using immediate value so i think i can just stop after this
+                        $$ = node;
+                        }
 		|L_PAREN Expression R_PAREN{//return expression
 			//printf("start of Term->L_Paren Expression R_paren\n");
 			//std::string temp = create_temp();

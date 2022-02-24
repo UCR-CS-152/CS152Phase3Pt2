@@ -1,0 +1,4 @@
+Error at Line 9:  Column: 19. Array can't be declared with size of less than 1
+Error at Line 10:  Column: 9. Variable has already declared
+Line 15: Array index used while using an integer variable
+Error at Line 27:  Column: 24. syntax error
