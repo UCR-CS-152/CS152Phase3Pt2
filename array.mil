@@ -1,2 +1,25 @@
-Error at Line 6:  Column: 14. Array can't be declared with size of less than 1
-Error at Line 9:  Column: 10. Using a reserved keyword
+func main
+.[] a, 4
+. b
+. c
+= b, 3
+= c, 5
+. _tmp0
++ _tmp0, b, c
+[]= a, 0, _tmp0
+.[]> a, 0
+[]= a, 1, 100
+.[]> a, 1
+[]= a, 2, 200
+.[]> a, 2
+. _tmp1
+=[] _tmp1, a, 0
+. _tmp2
+=[] _tmp2, a, 1
+. _tmp3
++ _tmp3, _tmp2, c
+. _tmp4
+* _tmp4, _tmp1, _tmp3
+[]= a, 3, _tmp4
+.[]> a, 3
+endfunc
