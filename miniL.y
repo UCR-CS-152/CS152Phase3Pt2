@@ -374,6 +374,20 @@ Statement: 	Ident ASSIGN Expression SEMICOLON Statement1 {
 											std::string label1=create_label();
 											std::string label2=create_label();
 											node->code=$2->code;
+											std::string br=std::string("Break");
+											std::string con=std::string("Continue");
+											std::size_t found = $4->code.find(br);
+											while(found!=std::string::npos){
+													std::string replace=std::string(":= ")+label2;
+													$4->code.replace(found,br.length(),replace);
+													found = $4->code.find(br);
+												}
+											found = $4->code.find(con);
+                                                                                        while(found!=std::string::npos){
+                                                                                                        std::string replace=std::string(":= ")+label1;
+                                                                                                        $4->code.replace(found,con.length(),replace);
+                                                                                                        found = $4->code.find(con);
+                                                                                                }
 											node->code+=std::string("! ")+$2->name+std::string(", ")+$2->name+std::string("\n");
 											node->code+=std::string(": ")+label1+std::string("\n")+std::string("?:= ")+label2+std::string(", ")+$2->name+std::string("\n")+$4->code+$2->code;
 											node->code+=std::string(":= ")+label1+std::string("\n")+std::string(": ")+label2+std::string("\n")+$7->code;
@@ -382,8 +396,23 @@ Statement: 	Ident ASSIGN Expression SEMICOLON Statement1 {
 		|DO BEGINLOOP Statement ENDLOOP WHILE Bool-Exp SEMICOLON Statement1 {
 											codeNode *node = new codeNode;
 											std::string label1=create_label();
+											std::string label2=create_label2();
+											std::string label3=create_label3();
 											//node->code=$6->code;
-											node->code=std::string(": ")+label1+std::string("\n")+$3->code+$6->code+std::string("?:= ")+label1+std::string(", ")+$6->name+std::string("\n")+$8->code;
+											while(found!=std::string::npos){
+                                                                                                        std::string replace=std::string(":= ")+label3;
+                                                                                                        $4->code.replace(found,br.length(),replace);
+                                                                                                        found = $4->code.find(br);
+                                                                                                }
+                                                                                        found = $4->code.find(con);
+                                                                                        while(found!=std::string::npos){
+                                                                                                        std::string replace=std::string(":= ")+label2;
+                                                                                                        $4->code.replace(found,con.length(),replace);
+                                                                                                        found = $4->code.find(con);
+                                                                                                }
+											node->code=std::string(": ")+label1+std::string("\n")+$3->code+$6->code;
+											node->code+=std::string(": ")+label2+std::string("\n")+std::string("?:= ")+label1+std::string(", ")+$6->name+std::string("\n");
+											node->code+=std::string(": ")+label3+std::string("\n")+$8->code;
 											$$=node;
 											}
 		|READ Ident SEMICOLON Statement1 {
@@ -432,8 +461,19 @@ Statement: 	Ident ASSIGN Expression SEMICOLON Statement1 {
                                                     node->code+=std::string(".[]> ")+var_name+std::string(", ")+$4->name+std::string("\n")+$7->code;
                                                     $$=node;
 												}
-		|CONTINUE SEMICOLON Statement1 {}
-		|BREAK SEMICOLON Statement1 {}
+                |CONTINUE SEMICOLON Statement1 {
+                                                codeNode *node = new codeNode;
+                                                node->code = std::string("Continue \n");
+                                                node->name = std::string ("Continue");
+                                                $$=node;
+                                                }
+                |BREAK SEMICOLON Statement1 {//maybe return break as a name then do where to go in level above
+                                                codeNode *node = new codeNode;
+                                                node->code = std::string("Break \n");
+                                                node->name = std::string ("Break");
+                                                $$=node;
+                                                }
+
 		|RETURN Expression SEMICOLON Statement1 {//return src 
 			//printf("Start of Statement->Return\n");
 			codeNode *node = new codeNode;
@@ -547,8 +587,17 @@ Statement1:	{codeNode *node= new codeNode;$$=node;}
                                                     node->code=$4->code+std::string(".[]> ")+$2->name+std::string(", ")+$4->name+std::string("\n")+$7->code;
                                                     $$=node;
                                                     }
-                |CONTINUE SEMICOLON Statement1 {}
+                |CONTINUE SEMICOLON Statement1 {
+						codeNode *node = new codeNode;
+						node->code = std::string("Continue \n");
+						node->name = std::string ("Continue");
+						$$=node;
+						}
                 |BREAK SEMICOLON Statement1 {//maybe return break as a name then do where to go in level above
+						codeNode *node = new codeNode;
+                                                node->code = std::string("Break \n");
+                                                node->name = std::string ("Break");
+                                                $$=node;
 						}
                 |RETURN Expression SEMICOLON Statement1 {//return src
 			//printf("Start of Statment1->Return Expression Semicolon Statement1\n");
