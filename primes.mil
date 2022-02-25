@@ -73,6 +73,7 @@ func main
 ! _tmp11, _tmp11
 := _label0
 : _label1
+:= _label6 
 : _label2
 . _tmp13
 + _tmp13, i, 1
