@@ -662,6 +662,7 @@ NotLoop:	{codeNode *node=new codeNode;node->name="0";$$=node;}
 				codeNode *node = new codeNode;
 				int not_count=std::stoi($2->name)+1;
 				node->name=std::to_string(not_count);
+				$$=node;
 				}
 
 Comp:	

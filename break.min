@@ -19,5 +19,6 @@ beginbody
 
     i := i + 1;
   endloop;
+  break;
 
 endbody

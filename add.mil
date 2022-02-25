@@ -1,11 +1,1 @@
-func main
-. a
-. b
-. c
-= a, 100
-= b, 50
-. _tmp0
-+ _tmp0, a, b
-= c, _tmp0
-.> c
-endfunc
+No main function defined
