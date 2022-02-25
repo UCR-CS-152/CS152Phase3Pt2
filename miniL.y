@@ -29,6 +29,7 @@ std::stack<std::string> paramCount;
 std::vector<std::pair<std::string,int>>functionscalled;
 std::vector<std::pair<std::string,int>>idents_used;
 std::vector<std::pair<std::string,int>>arrays_used;
+int loopCount=0;
 bool er=false;
 bool inLoop=false;
 std::string assignments;
@@ -368,7 +369,7 @@ Statement: 	Ident ASSIGN Expression SEMICOLON Statement1 {
 									node->code+=std::string(": ")+label2+std::string("\n")+$9->code;
                                                                         $$=node;
 									}
-		|WHILE{inLoop=true;} Bool-Exp BEGINLOOP Statement ENDLOOP{inLoop=false;} SEMICOLON Statement1 {
+		|WHILE{inLoop=true;loopCount++;} Bool-Exp BEGINLOOP Statement ENDLOOP{if(loopCount>0)loopCount--;if(loopCount==0)inLoop=false;} SEMICOLON Statement1 {
 											codeNode *node = new codeNode;
 											std::string label1=create_label();
 											std::string label2=create_label();
@@ -393,7 +394,8 @@ Statement: 	Ident ASSIGN Expression SEMICOLON Statement1 {
 											node->code+=std::string(":= ")+label1+std::string("\n")+std::string(": ")+label2+std::string("\n")+$9->code;
 											$$=node;
 											}
-		|DO{inLoop=true;} BEGINLOOP Statement ENDLOOP WHILE Bool-Exp SEMICOLON{inLoop=false;} Statement1 {
+		|DO{inLoop=true;loopCount++;} BEGINLOOP Statement ENDLOOP WHILE Bool-Exp SEMICOLON{if(loopCount>0)loopCount--;if(loopCount==0)inLoop=false;} Statement1 {
+
 											codeNode *node = new codeNode;
 											std::string label1=create_label();
 											std::string label2=create_label();
@@ -464,13 +466,13 @@ Statement: 	Ident ASSIGN Expression SEMICOLON Statement1 {
                                                     node->code+=std::string(".[]> ")+var_name+std::string(", ")+$4->name+std::string("\n")+$7->code;
                                                     $$=node;
 												}
-                |CONTINUE{if(inLoop==false)er=true;yyerror("Continue is not in loop");} SEMICOLON Statement1 {
+                |CONTINUE{if(inLoop==false){er=true;yyerror("Continue is not in loop");}} SEMICOLON Statement1 {
                                                 codeNode *node = new codeNode;
                                                 node->code = std::string("Continue \n");
                                                 node->name = std::string ("Continue");
                                                 $$=node;
                                                 }
-                |BREAK{if(inLoop==false)er=true;yyerror("Break is not in loop");} SEMICOLON Statement1 {//maybe return break as a name then do where to go in level above
+                |BREAK{if(inLoop==false){er=true;yyerror("Break is not in loop");}} SEMICOLON Statement1 {//maybe return break as a name then do where to go in level above
                                                 codeNode *node = new codeNode;
                                                 node->code = std::string("Break \n");
                                                 node->name = std::string ("Break");
@@ -528,7 +530,7 @@ Statement1:	{codeNode *node= new codeNode;$$=node;}
                                                                         node->code+=std::string(": ")+label2+std::string("\n")+$9->code;
                                                                         $$=node;
                                                                         }
-                |WHILE{inLoop=true;} Bool-Exp BEGINLOOP Statement ENDLOOP{inLoop=false;} SEMICOLON Statement1 {
+                |WHILE{inLoop=true;loopCount++;} Bool-Exp BEGINLOOP Statement ENDLOOP{if(loopCount>0)loopCount--;if(loopCount==0)inLoop=false;} SEMICOLON Statement1 {
 											codeNode *node = new codeNode;
 											std::string label1=create_label();
 											std::string label2=create_label();
@@ -553,7 +555,7 @@ Statement1:	{codeNode *node= new codeNode;$$=node;}
 											node->code+=std::string(":= ")+label1+std::string("\n")+std::string(": ")+label2+std::string("\n")+$9->code;
 											$$=node;
                                                                                         }
-                |DO BEGINLOOP{inLoop=true;} Statement ENDLOOP WHILE Bool-Exp SEMICOLON{inLoop=false;} Statement1 {
+                |DO BEGINLOOP{inLoop=true;loopCount++;} Statement ENDLOOP WHILE Bool-Exp SEMICOLON{if(loopCount>0)loopCount--;if(loopCount==0)inLoop=false;} Statement1 {
 											codeNode *node = new codeNode;
 											std::string label1=create_label();
 											std::string label2=create_label();
@@ -622,13 +624,13 @@ Statement1:	{codeNode *node= new codeNode;$$=node;}
                                                     node->code=$4->code+std::string(".[]> ")+$2->name+std::string(", ")+$4->name+std::string("\n")+$7->code;
                                                     $$=node;
                                                     }
-                |CONTINUE{if(inLoop==false)er=true;yyerror("Continue not in loop.");} SEMICOLON Statement1 {
+                |CONTINUE{if(inLoop==false){er=true;yyerror("Continue not in loop.");}} SEMICOLON Statement1 {
 						codeNode *node = new codeNode;
 						node->code = std::string("Continue \n");
 						node->name = std::string ("Continue");
 						$$=node;
 						}
-                |BREAK{if(inLoop==false)er=true;yyerror("Break not in loop.");} SEMICOLON Statement1 {//maybe return break as a name then do where to go in level above
+                |BREAK{if(inLoop==false){er=true;yyerror("Break not in loop.");}} SEMICOLON Statement1 {//maybe return break as a name then do where to go in level above
 						codeNode *node = new codeNode;
                                                 node->code = std::string("Break \n");
                                                 node->name = std::string ("Break");
