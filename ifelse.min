@@ -15,7 +15,7 @@ beginbody
   a := 100;
   b := 50;
 
-  if a < b then
+  if not a < b then
     c := b;
   else
     c := a;

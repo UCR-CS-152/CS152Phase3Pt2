@@ -7,6 +7,7 @@ func main
 . _tmp0
 < _tmp0, a, b
 ! _tmp0, _tmp0
+! _tmp0, _tmp0
 ?:= _label0, _tmp0
 = c, b
 := _label1
